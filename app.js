@@ -271,9 +271,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         chatContainer.innerHTML = '';
         currentQuestionText = `Olá, ${currentStudent}! Que bom te ver por aqui. Vejo que você está lendo **"${currentBook}"**.\n\nPara começarmos, qual parte desse livro mexeu mais com os seus sentimentos ou chamou sua atenção até agora?`;
         setTimeout(() => addMessage('app', currentQuestionText), 500);
+        btnSend.addEventListener('click', handleSend);
+        // Update teacher metrics after any new session is saved
+        const originalHandleSend = handleSend;
+        handleSend = async function() {
+            await originalHandleSend();
+            // After session possibly saved, refresh metrics
+            await loadSessions();
+            updateMetrics();
+        };
     }
 
-    btnSend.addEventListener('click', handleSend);
     diaryInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
@@ -315,6 +323,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 currentSession.diagnosis = getDiagnosis(newProb).text;
                 
                 const { error } = await supabase.from('sessions').insert([currentSession]);
+                // After inserting, update metrics
+                // (Metrics will be refreshed after handleSend wrapper)
                 
                 if (!error) {
                     addMessage('app', "Muito obrigado por compartilhar suas ideias! O registro do seu diário de hoje foi salvo com sucesso. Pode fechar o app e até a próxima leitura!");
@@ -332,6 +342,27 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // ----- PAINEL DO PROFESSOR ----- //
+    function updateMetrics(){
+        // Active readings count: total sessions
+        const activeCount = allSessions.length;
+        const activeSpan = document.getElementById('active-readings-count');
+        if(activeSpan) activeSpan.textContent = activeCount;
+        // Average engagement: average final_probability *100
+        let avg = 0;
+        if(activeCount>0){
+            const sum = allSessions.reduce((acc,s)=>acc + (s.final_probability||0),0);
+            avg = (sum/activeCount)*100;
+        }
+        const avgSpan = document.getElementById('average-engagement');
+        if(avgSpan) avgSpan.textContent = avg.toFixed(0)+'%';
+        // Attention alerts: count of sessions with low probability (<0.4)
+        const alerts = allSessions.filter(s=> (s.final_probability||0) < 0.4).length;
+        const alertsSpan = document.getElementById('attention-alerts');
+        if(alertsSpan) alertsSpan.textContent = alerts;
+    }
+    // Call updateMetrics after loading sessions initially
+    loadSessions().then(updateMetrics);
+
     function renderTeacherPanel() {
         teacherMetricsList.innerHTML = '';
         
