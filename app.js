@@ -126,18 +126,37 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     btnAddBook.addEventListener('click', async () => {
         const title = inputNewBook.value.trim();
-        if (title && !books.find(b => b.title === title)) {
-            // Loading state
-            btnAddBook.innerHTML = 'Salvando...';
-            btnAddBook.disabled = true;
-            
+        
+        if (!title) {
+            alert('Por favor, digite o título do livro.');
+            return;
+        }
+
+        const bookExists = books.find(b => b.title.toLowerCase() === title.toLowerCase());
+        if (bookExists) {
+            alert('Este livro já está no acervo.');
+            return;
+        }
+
+        // Loading state
+        btnAddBook.innerHTML = 'Salvando...';
+        btnAddBook.disabled = true;
+        
+        try {
             const { data, error } = await supabase.from('books').insert([{ title }]).select();
-            if (!error && data) {
+            
+            if (error) {
+                console.error('Erro Supabase:', error);
+                alert('Erro ao salvar o livro na nuvem: ' + error.message);
+            } else if (data && data.length > 0) {
                 books.push(data[0]);
                 renderBooks();
                 inputNewBook.value = '';
             }
-            
+        } catch (err) {
+            console.error('Erro de requisição:', err);
+            alert('Erro inesperado ao salvar.');
+        } finally {
             btnAddBook.innerHTML = 'Adicionar Livro';
             btnAddBook.disabled = false;
         }
