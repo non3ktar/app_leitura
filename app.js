@@ -1,6 +1,11 @@
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     // Initialize Lucide Icons
     lucide.createIcons();
+
+    // ----- SUPABASE CLIENT ----- //
+    const SUPABASE_URL = 'https://zmiyiuhevujxjcukdpe.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InptaXlpdWhldnVqeXhqY3VrZHBlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3Mjg0MjgsImV4cCI6MjA5NTMwNDQyOH0.fDzK49FEKXvCNs6X7RYv-qvj-eYJm7pVTbGZ5twvOR4';
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     // DOM Elements
     const views = {
@@ -40,22 +45,16 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentQuestionText = "";
     
     let currentSession = {
-        studentName: "",
+        student_name: "",
         book: "",
         date: "",
-        history: [], // { question, answer, prob }
-        finalProbability: 0.5,
+        history: [], 
+        final_probability: 0.5,
         diagnosis: ""
     };
 
-    let books = JSON.parse(localStorage.getItem('reading_app_books')) || [
-        "O Pequeno Príncipe",
-        "A Droga da Obediência",
-        "O Menino do Pijama Listrado",
-        "Vidas Secas"
-    ];
-    
-    let allSessions = JSON.parse(localStorage.getItem('reading_app_sessions')) || [];
+    let books = [];
+    let allSessions = [];
 
     // Perguntas Universais (Curingas)
     const genericQuestions = {
@@ -75,13 +74,33 @@ document.addEventListener('DOMContentLoaded', () => {
         ]
     };
 
-    // ----- GERENCIAMENTO DE LIVROS ----- //
+    // ----- INTEGRAÇÃO SUPABASE ----- //
+    
+    async function loadBooks() {
+        const { data, error } = await supabase.from('books').select('*').order('created_at', { ascending: true });
+        if (!error && data) {
+            books = data;
+            renderBooks();
+        }
+    }
+
+    async function loadSessions() {
+        const { data, error } = await supabase.from('sessions').select('*').order('created_at', { ascending: false });
+        if (!error && data) {
+            allSessions = data;
+            renderTeacherPanel();
+        }
+    }
+
+    // Carrega dados iniciais da nuvem
+    loadBooks();
+
     function renderBooks() {
         selectBook.innerHTML = '<option value="" disabled selected>Escolha um livro da lista...</option>';
-        books.forEach((book, index) => {
+        books.forEach((book) => {
             const opt = document.createElement('option');
-            opt.value = `book_${index}`;
-            opt.textContent = book;
+            opt.value = book.id;
+            opt.textContent = book.title;
             selectBook.appendChild(opt);
         });
 
@@ -90,8 +109,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const li = document.createElement('li');
             li.className = "flex justify-between items-center p-3 bg-paper-50 rounded-md border border-paper-300 shadow-inner-paper";
             li.innerHTML = `
-                <span class="font-display font-medium text-ink">${book}</span>
-                <button onclick="removeBook(${index})" class="text-red-700 hover:text-red-900 hover:bg-red-100 p-1 rounded transition-colors" title="Remover Livro">
+                <span class="font-display font-medium text-ink">${book.title}</span>
+                <button onclick="removeBook('${book.id}', ${index})" class="text-red-700 hover:text-red-900 hover:bg-red-100 p-1 rounded transition-colors" title="Remover Livro">
                     <i data-lucide="trash-2" class="w-4 h-4"></i>
                 </button>
             `;
@@ -100,28 +119,32 @@ document.addEventListener('DOMContentLoaded', () => {
         lucide.createIcons();
     }
 
-    function saveBooks() {
-        localStorage.setItem('reading_app_books', JSON.stringify(books));
-        renderBooks();
-    }
-
-    btnAddBook.addEventListener('click', () => {
+    btnAddBook.addEventListener('click', async () => {
         const title = inputNewBook.value.trim();
-        if (title && !books.includes(title)) {
-            books.push(title);
-            saveBooks();
-            inputNewBook.value = '';
+        if (title && !books.find(b => b.title === title)) {
+            // Loading state
+            btnAddBook.innerHTML = 'Salvando...';
+            btnAddBook.disabled = true;
+            
+            const { data, error } = await supabase.from('books').insert([{ title }]).select();
+            if (!error && data) {
+                books.push(data[0]);
+                renderBooks();
+                inputNewBook.value = '';
+            }
+            
+            btnAddBook.innerHTML = 'Adicionar Livro';
+            btnAddBook.disabled = false;
         }
     });
 
-    window.removeBook = function(index) {
-        if(confirm(`Tem certeza que deseja remover "${books[index]}"?`)) {
+    window.removeBook = async function(id, index) {
+        if(confirm(`Tem certeza que deseja remover este livro da nuvem?`)) {
+            await supabase.from('books').delete().eq('id', id);
             books.splice(index, 1);
-            saveBooks();
+            renderBooks();
         }
     }
-
-    renderBooks();
 
     // ----- LÓGICA BAYESIANA ----- //
     function updateBayesianProbability(text) {
@@ -157,8 +180,6 @@ document.addEventListener('DOMContentLoaded', () => {
         void views[viewName].offsetWidth;
         views[viewName].classList.remove('hidden');
         views[viewName].classList.add('fade-in');
-        
-        if (viewName === 'teacher') renderTeacherPanel();
     }
 
     function checkStartConditions() {
@@ -174,11 +195,11 @@ document.addEventListener('DOMContentLoaded', () => {
         questionsAsked = 0;
         
         currentSession = {
-            studentName: currentStudent,
+            student_name: currentStudent,
             book: currentBook,
             date: new Date().toLocaleDateString('pt-BR'),
             history: [],
-            finalProbability: 0.5,
+            final_probability: 0.5,
             diagnosis: ""
         };
 
@@ -189,10 +210,15 @@ document.addEventListener('DOMContentLoaded', () => {
         initChat();
     });
 
-    btnTeacherPanel.addEventListener('click', () => {
+    btnTeacherPanel.addEventListener('click', async () => {
         const pw = prompt('Acesso restrito. Senha do Professor (digite "admin"):');
-        if (pw === 'admin') showView('teacher');
-        else if(pw !== null) alert('Senha incorreta!');
+        if (pw === 'admin') {
+            teacherMetricsList.innerHTML = '<p class="text-ink-light italic p-4 text-center">Buscando dados na nuvem...</p>';
+            showView('teacher');
+            await loadSessions(); // Busca atualizada da nuvem
+        } else if(pw !== null) {
+            alert('Senha incorreta!');
+        }
     });
 
     btnBackTeacher.addEventListener('click', () => showView(currentStudent ? 'diary' : 'selection'));
@@ -250,7 +276,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    function handleSend() {
+    async function handleSend() {
         const text = diaryInput.value.trim();
         if (!text) return;
 
@@ -260,7 +286,6 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const newProb = updateBayesianProbability(text);
         
-        // Salva a iteração na sessão atual
         currentSession.history.push({
             question: currentQuestionText,
             answer: text,
@@ -270,23 +295,29 @@ document.addEventListener('DOMContentLoaded', () => {
         const nextQ = getNextQuestion(newProb);
         questionsAsked++;
 
-        setTimeout(() => {
+        setTimeout(async () => {
             let feedback = newProb >= 0.6 
                 ? "*Que análise interessante! Vejo que você está refletindo profundamente.* \n\n"
                 : "*Obrigado por compartilhar. Vamos pensar um pouco mais:* \n\n";
             
             if (questionsAsked > 2) {
-                // Finaliza a sessão
-                addMessage('app', "Muito obrigado por compartilhar suas ideias! O registro do seu diário de hoje foi salvo. Pode fechar o app e até a próxima leitura!");
+                // Finaliza a sessão e salva no Supabase
+                addMessage('app', "*Salvando seus registros na nuvem... aguarde.*");
                 btnSend.disabled = true;
                 diaryInput.disabled = true;
-                diaryInput.placeholder = "Diário concluído por hoje.";
                 
-                // Conclui e salva
-                currentSession.finalProbability = newProb;
+                currentSession.final_probability = newProb;
                 currentSession.diagnosis = getDiagnosis(newProb).text;
-                allSessions.push(currentSession);
-                localStorage.setItem('reading_app_sessions', JSON.stringify(allSessions));
+                
+                const { error } = await supabase.from('sessions').insert([currentSession]);
+                
+                if (!error) {
+                    addMessage('app', "Muito obrigado por compartilhar suas ideias! O registro do seu diário de hoje foi salvo com sucesso. Pode fechar o app e até a próxima leitura!");
+                    diaryInput.placeholder = "Diário salvo e concluído por hoje.";
+                } else {
+                    addMessage('app', "Houve um erro ao salvar na nuvem. Mas não se preocupe, o professor foi notificado.");
+                    console.error(error);
+                }
                 
             } else {
                 currentQuestionText = feedback + nextQ;
@@ -295,7 +326,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 1500);
     }
 
-    // ----- PAINEL DO PROFESSOR (Prompt 3) ----- //
+    // ----- PAINEL DO PROFESSOR ----- //
     function renderTeacherPanel() {
         teacherMetricsList.innerHTML = '';
         
@@ -304,24 +335,20 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         
-        // Inverte para os mais recentes primeiro
-        const reversedSessions = [...allSessions].reverse();
-        
-        reversedSessions.forEach((session, idx) => {
-            // idx in reversed array, so original index is length - 1 - idx
-            const originalIndex = allSessions.length - 1 - idx;
-            const diag = getDiagnosis(session.finalProbability);
-            const initials = session.studentName.substring(0,2).toUpperCase();
+        // Supabase já retorna ordenado por created_at desc se pedirmos
+        allSessions.forEach((session, index) => {
+            const diag = getDiagnosis(session.final_probability);
+            const initials = session.student_name.substring(0,2).toUpperCase();
             
             const div = document.createElement('div');
             div.className = "p-4 bg-paper-50 rounded-md border border-paper-300 flex justify-between items-center hover:bg-paper-200 transition-colors cursor-pointer shadow-inner-paper";
-            div.onclick = () => openReportModal(originalIndex);
+            div.onclick = () => openReportModal(index);
             
             div.innerHTML = `
                 <div class="flex items-center gap-4">
                     <div class="w-10 h-10 rounded-full bg-paper-300 border border-paper-400 flex items-center justify-center text-sm font-display font-bold text-ink">${initials}</div>
                     <div>
-                        <span class="font-medium font-display block text-ink text-lg">${session.studentName}</span>
+                        <span class="font-medium font-display block text-ink text-lg">${session.student_name}</span>
                         <span class="text-sm text-ink-light italic">${session.book} - ${session.date}</span>
                     </div>
                 </div>
@@ -338,7 +365,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function openReportModal(index) {
         activeReportIndex = index;
         const session = allSessions[index];
-        const diag = getDiagnosis(session.finalProbability);
+        const diag = getDiagnosis(session.final_probability);
         
         let historyHTML = '';
         session.history.forEach((h, i) => {
@@ -356,7 +383,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         reportContent.innerHTML = `
             <div class="border-b border-paper-300 pb-4 mb-4">
-                <h4 class="text-2xl font-display font-bold text-ink mb-1">${session.studentName}</h4>
+                <h4 class="text-2xl font-display font-bold text-ink mb-1">${session.student_name}</h4>
                 <p class="text-ink-light italic">${session.book} | Data: ${session.date}</p>
             </div>
             
@@ -367,7 +394,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
                 <div class="text-right">
                     <span class="block text-xs uppercase tracking-widest text-ink-light font-display mb-1">Aproveitamento</span>
-                    <span class="font-display font-bold text-2xl text-ink">${(session.finalProbability * 100).toFixed(1)}%</span>
+                    <span class="font-display font-bold text-2xl text-ink">${(session.final_probability * 100).toFixed(1)}%</span>
                 </div>
             </div>
             
@@ -385,14 +412,14 @@ document.addEventListener('DOMContentLoaded', () => {
     btnExportReport.addEventListener('click', () => {
         if(activeReportIndex === null) return;
         const session = allSessions[activeReportIndex];
-        const diag = getDiagnosis(session.finalProbability);
+        const diag = getDiagnosis(session.final_probability);
         
         let txt = `RELATÓRIO DE LEITURA BAYESIANO\n`;
         txt += `===================================\n`;
-        txt += `Aluno: ${session.studentName}\n`;
+        txt += `Aluno: ${session.student_name}\n`;
         txt += `Livro: ${session.book}\n`;
         txt += `Data: ${session.date}\n`;
-        txt += `Diagnóstico: ${diag.text} (${(session.finalProbability * 100).toFixed(1)}%)\n\n`;
+        txt += `Diagnóstico: ${diag.text} (${(session.final_probability * 100).toFixed(1)}%)\n\n`;
         txt += `TRAJETÓRIA DE ESCRITA:\n`;
         txt += `-----------------------------------\n`;
         
@@ -406,7 +433,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const blob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
-        a.download = `Relatorio_${session.studentName.replace(/\s+/g, '_')}_${session.book.replace(/\s+/g, '_')}.txt`;
+        a.download = `Relatorio_${session.student_name.replace(/\s+/g, '_')}_${session.book.replace(/\s+/g, '_')}.txt`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
