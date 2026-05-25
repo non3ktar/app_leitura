@@ -412,12 +412,30 @@ document.addEventListener('DOMContentLoaded', async () => {
                         <span class="text-sm text-ink-light italic">${session.book} - ${session.date}</span>
                     </div>
                 </div>
-                <div class="text-right">
+                <div class="flex items-center gap-3 text-right">
                     <span class="text-xs px-3 py-1 ${diag.color} border rounded-sm font-medium uppercase tracking-wider font-display">${diag.text}</span>
+                    <button onclick="removeSession(event, '${session.id}', ${index})" class="text-red-700 hover:text-red-900 hover:bg-red-100 p-2 rounded transition-colors" title="Apagar Diário">
+                        <i data-lucide="trash-2" class="w-5 h-5"></i>
+                    </button>
                 </div>
             `;
             teacherMetricsList.appendChild(div);
         });
+        lucide.createIcons();
+    }
+
+    window.removeSession = async function(e, id, index) {
+        e.stopPropagation(); // Impede de abrir o modal ao clicar em excluir
+        if(confirm(`Tem certeza que deseja apagar o diário deste aluno permanentemente?`)) {
+            const { error } = await supabase.from('sessions').delete().eq('id', id);
+            if(error) {
+                alert("Erro ao excluir: " + error.message);
+                return;
+            }
+            allSessions.splice(index, 1);
+            renderTeacherPanel();
+            updateMetrics();
+        }
     }
 
     let activeReportIndex = null;
