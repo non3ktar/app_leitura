@@ -1,7 +1,6 @@
 document.addEventListener('DOMContentLoaded', async () => {
-    // Initialize Lucide Icons
-    lucide.createIcons();
-
+    // Lucide was removed, using Material Symbols.
+    
     // ----- SUPABASE CLIENT ----- //
     const SUPABASE_URL = 'https://zmiyiuhevujyxjcukdpe.supabase.co';
     const TEACHER_PASSWORD = 'Zk7!pL9x$Qe2';
@@ -41,6 +40,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     const reportContent = document.getElementById('report-content');
     const btnCloseReport = document.getElementById('btn-close-report');
     const btnExportReport = document.getElementById('btn-export-report');
+    
+    const stickyInputArea = document.getElementById('sticky-input-area');
+    const depthPercentage = document.getElementById('depth-percentage');
+    const depthBar = document.getElementById('depth-bar');
 
     // Abrir/Fechar Help Modal
     btnHelp.addEventListener('click', () => helpModal.classList.remove('hidden'));
@@ -117,16 +120,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         teacherBookList.innerHTML = '';
         books.forEach((book, index) => {
             const li = document.createElement('li');
-            li.className = "flex justify-between items-center p-3 bg-paper-50 rounded-md border border-paper-300 shadow-inner-paper";
+            li.className = "flex justify-between items-center p-3 bg-surface rounded-xl border border-outline-variant shadow-sm";
             li.innerHTML = `
-                <span class="font-display font-medium text-ink">${book.title}</span>
-                <button onclick="removeBook('${book.id}', ${index})" class="text-red-700 hover:text-red-900 hover:bg-red-100 p-1 rounded transition-colors" title="Remover Livro">
-                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                <span class="font-body-md text-on-surface">${book.title}</span>
+                <button onclick="removeBook('${book.id}', ${index})" class="text-error hover:bg-error-container hover:text-on-error-container p-2 rounded-full transition-colors flex items-center justify-center" title="Remover Livro">
+                    <span class="material-symbols-outlined text-sm">delete</span>
                 </button>
             `;
             teacherBookList.appendChild(li);
         });
-        lucide.createIcons();
     }
 
     btnAddBook.addEventListener('click', async () => {
@@ -204,11 +206,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     function showView(viewName) {
         Object.values(views).forEach(v => {
             v.classList.add('hidden');
-            v.classList.remove('fade-in');
+            v.classList.remove('fade-in', 'flex');
         });
-        void views[viewName].offsetWidth;
-        views[viewName].classList.remove('hidden');
-        views[viewName].classList.add('fade-in');
+        
+        if(views[viewName]) {
+            void views[viewName].offsetWidth;
+            views[viewName].classList.remove('hidden');
+            views[viewName].classList.add('fade-in', 'flex');
+        }
+        
+        if (stickyInputArea) {
+            if (viewName === 'diary') stickyInputArea.classList.remove('hidden');
+            else stickyInputArea.classList.add('hidden');
+        }
     }
 
     function checkStartConditions() {
@@ -231,6 +241,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             final_probability: 0.5,
             diagnosis: ""
         };
+
+        if(depthBar) depthBar.style.width = '50%';
+        if(depthPercentage) depthPercentage.innerText = '50%';
 
         showView('diary');
         btnSend.disabled = false;
@@ -268,27 +281,39 @@ document.addEventListener('DOMContentLoaded', async () => {
     function addMessage(sender, text) {
         const msgDiv = document.createElement('div');
         const isApp = sender === 'app';
-        msgDiv.className = `flex w-full ${isApp ? 'justify-start' : 'justify-end'} opacity-0 translate-y-4 transition-all duration-500 ease-out`;
         
         const formattedText = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
-        const innerDiv = document.createElement('div');
         
-        const baseClasses = "max-w-[85%] md:max-w-[75%] p-5 shadow-sm border font-sans relative";
-        const appClasses = "bg-paper-100 text-ink border-paper-300 rounded-sm rounded-tl-none";
-        const userClasses = "bg-[#F4E9D8] text-ink border-[#E3D3B8] rounded-sm rounded-tr-none shadow-inner-paper";
-        innerDiv.className = `${baseClasses} ${isApp ? appClasses : userClasses}`;
+        if (isApp) {
+            msgDiv.className = `flex flex-col gap-2 max-w-3xl animate-in fade-in slide-in-from-bottom-4 duration-700`;
+            msgDiv.innerHTML = `
+                <div class="flex items-center gap-2 mb-1">
+                    <div class="w-6 h-6 bg-primary-container rounded-full flex items-center justify-center">
+                        <span class="material-symbols-outlined text-[14px] text-on-primary">auto_awesome</span>
+                    </div>
+                    <span class="font-label-md text-label-md text-primary font-semibold">Tutor Literário</span>
+                </div>
+                <div class="chat-bubble-ai px-4">
+                    <p class="font-body-md text-body-md text-on-surface-variant">${formattedText}</p>
+                </div>
+            `;
+        } else {
+            msgDiv.className = `flex flex-col gap-2 max-w-3xl ml-auto text-right animate-in fade-in slide-in-from-bottom-4 duration-500`;
+            msgDiv.innerHTML = `
+                <div class="flex items-center gap-2 mb-1 justify-end">
+                    <span class="font-label-md text-label-md text-secondary font-semibold">Sua Reflexão</span>
+                    <div class="w-6 h-6 bg-secondary-container rounded-full flex items-center justify-center">
+                        <span class="material-symbols-outlined text-[14px] text-on-secondary-container">person</span>
+                    </div>
+                </div>
+                <div class="bg-surface-container border border-outline-variant p-4 rounded-xl shadow-sm text-left">
+                    <p class="font-body-md text-body-md text-on-surface">${formattedText}</p>
+                </div>
+            `;
+        }
         
-        const headerHTML = isApp 
-            ? `<div class="text-[10px] font-display font-bold text-leather-dark mb-3 uppercase tracking-widest border-b border-paper-300 pb-1">Guia de Leitura</div>`
-            : `<div class="text-[10px] font-display font-bold text-ink-light mb-3 uppercase tracking-widest border-b border-[#E3D3B8] pb-1">Sua Reflexão</div>`;
-
-        innerDiv.innerHTML = `${headerHTML}<p class="text-[16px] leading-loose">${formattedText}</p>`;
-        
-        msgDiv.appendChild(innerDiv);
         chatContainer.appendChild(msgDiv);
-        
-        requestAnimationFrame(() => msgDiv.classList.remove('opacity-0', 'translate-y-4'));
-        setTimeout(() => chatContainer.scrollTo({ top: chatContainer.scrollHeight, behavior: 'smooth' }), 100);
+        setTimeout(() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }), 100);
     }
 
     function initChat() {
@@ -322,6 +347,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         diaryInput.style.height = 'auto';
         
         const newProb = updateBayesianProbability(text);
+        
+        // --- NEW: Animate Depth Bar --- //
+        const newProbPct = Math.round(newProb * 100);
+        if(depthBar) depthBar.style.width = `${newProbPct}%`;
+        if(depthPercentage) {
+            depthPercentage.innerText = `${newProbPct}%`;
+            depthPercentage.classList.add('scale-125');
+            setTimeout(() => depthPercentage.classList.remove('scale-125'), 300);
+        }
+        // ----------------------------- //
         
         currentSession.history.push({
             question: currentQuestionText,
@@ -395,33 +430,31 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
         
-        // Supabase já retorna ordenado por created_at desc se pedirmos
-        allSessions.forEach((session, index) => {
+                allSessions.forEach((session, index) => {
             const diag = getDiagnosis(session.final_probability);
             const initials = session.student_name.substring(0,2).toUpperCase();
             
             const div = document.createElement('div');
-            div.className = "p-4 bg-paper-50 rounded-md border border-paper-300 flex justify-between items-center hover:bg-paper-200 transition-colors cursor-pointer shadow-inner-paper";
+            div.className = "p-4 bg-surface rounded-xl border border-outline-variant flex justify-between items-center hover:bg-secondary-container transition-colors cursor-pointer shadow-sm";
             div.onclick = () => openReportModal(index);
             
             div.innerHTML = `
                 <div class="flex items-center gap-4">
-                    <div class="w-10 h-10 rounded-full bg-paper-300 border border-paper-400 flex items-center justify-center text-sm font-display font-bold text-ink">${initials}</div>
+                    <div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center text-sm font-label-md font-bold text-on-primary-container">${initials}</div>
                     <div>
-                        <span class="font-medium font-display block text-ink text-lg">${session.student_name}</span>
-                        <span class="text-sm text-ink-light italic">${session.book} - ${session.date}</span>
+                        <span class="font-title-lg block text-on-surface">${session.student_name}</span>
+                        <span class="text-sm text-on-surface-variant italic">${session.book} - ${session.date}</span>
                     </div>
                 </div>
                 <div class="flex items-center gap-3 text-right">
-                    <span class="text-xs px-3 py-1 ${diag.color} border rounded-sm font-medium uppercase tracking-wider font-display">${diag.text}</span>
-                    <button onclick="removeSession(event, '${session.id}', ${index})" class="text-red-700 hover:text-red-900 hover:bg-red-100 p-2 rounded transition-colors" title="Apagar Diário">
-                        <i data-lucide="trash-2" class="w-5 h-5"></i>
+                    <span class="text-xs px-3 py-1 ${diag.color} border border-outline-variant rounded-full font-label-md uppercase tracking-wider">${diag.text}</span>
+                    <button onclick="removeSession(event, '${session.id}', ${index})" class="text-error hover:bg-error-container hover:text-on-error-container p-2 rounded-full transition-colors" title="Apagar Diário">
+                        <span class="material-symbols-outlined text-sm">delete</span>
                     </button>
                 </div>
             `;
             teacherMetricsList.appendChild(div);
         });
-        lucide.createIcons();
     }
 
     window.removeSession = async function(e, id, index) {
@@ -449,35 +482,36 @@ document.addEventListener('DOMContentLoaded', async () => {
         session.history.forEach((h, i) => {
             const probPct = (h.probabilityAfter * 100).toFixed(1);
             historyHTML += `
-                <div class="border-l-2 border-leather pl-4 mb-6">
-                    <p class="text-sm font-display font-bold text-leather-dark mb-1">Pergunta ${i+1}:</p>
-                    <p class="text-ink text-sm mb-3 italic">${h.question.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}</p>
-                    <p class="text-sm font-display font-bold text-ink mb-1">Resposta do Aluno:</p>
-                    <p class="text-ink p-3 bg-paper-200 rounded-sm shadow-inner-paper mb-2">${h.answer}</p>
-                    <p class="text-xs text-ink-light text-right">Probabilidade Bayesiana após resposta: <span class="font-bold text-ink">${probPct}%</span></p>
+                <div class="border-l-2 border-primary pl-4 mb-6">
+                    <p class="text-sm font-label-md text-primary mb-1">Pergunta ${i+1}:</p>
+                    <p class="text-on-surface text-sm mb-3 italic">${h.question.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}</p>
+                    <p class="text-sm font-label-md text-on-surface mb-1">Resposta do Aluno:</p>
+                    <p class="text-on-surface p-4 bg-surface-container rounded-xl border border-outline-variant mb-2">${h.answer}</p>
+                    <p class="text-xs text-on-surface-variant text-right">Profundidade Bayesiana Após Resposta: <span class="font-bold text-primary">${probPct}%</span></p>
                 </div>
             `;
         });
 
         reportContent.innerHTML = `
-            <div class="border-b border-paper-300 pb-4 mb-4">
-                <h4 class="text-2xl font-display font-bold text-ink mb-1">${session.student_name}</h4>
-                <p class="text-ink-light italic">${session.book} | Data: ${session.date}</p>
+            <div class="border-b border-outline-variant pb-4 mb-4">
+                <h4 class="text-[28px] font-headline-md text-primary mb-1">${session.student_name}</h4>
+                <p class="text-on-surface-variant italic font-body-md">${session.book} | Data: ${session.date}</p>
             </div>
             
-            <div class="bg-paper-200 p-4 rounded-sm border border-paper-300 mb-6 flex justify-between items-center shadow-inner-paper">
-                <div>
-                    <span class="block text-xs uppercase tracking-widest text-ink-light font-display mb-1">Diagnóstico Final do Algoritmo</span>
-                    <span class="font-display font-bold text-lg ${diag.color.split(' ')[0]}">${diag.text}</span>
+            <div class="bg-surface-container p-6 rounded-2xl border border-outline-variant mb-6 flex flex-col md:flex-row justify-between items-center shadow-sm">
+                <div class="mb-4 md:mb-0 text-center md:text-left">
+                    <span class="block text-xs uppercase tracking-widest text-on-surface-variant font-label-md mb-1">Diagnóstico Final do Algoritmo</span>
+                    <span class="font-headline-sm text-lg ${diag.color.split(' ')[0]}">${diag.text}</span>
                 </div>
-                <div class="text-right">
-                    <span class="block text-xs uppercase tracking-widest text-ink-light font-display mb-1">Aproveitamento</span>
-                    <span class="font-display font-bold text-2xl text-ink">${(session.final_probability * 100).toFixed(1)}%</span>
+                <div class="text-center md:text-right">
+                    <span class="block text-xs uppercase tracking-widest text-on-surface-variant font-label-md mb-1">Aproveitamento</span>
+                    <span class="font-display-lg text-primary">${(session.final_probability * 100).toFixed(1)}%</span>
                 </div>
             </div>
             
-            <h5 class="font-display font-bold text-ink text-lg mb-4">Trajetória de Escrita</h5>
-            ${historyHTML}
+            <div class="font-body-md">
+                ${historyHTML}
+            </div>
         `;
         
         reportModal.classList.remove('hidden');

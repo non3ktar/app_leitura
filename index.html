@@ -1,240 +1,275 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html class="light" lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Diário de Leitura Bayesiano</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <link rel="stylesheet" href="style.css">
-    <script>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Diário de Leitura</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:wght@400;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    
+    <script id="tailwind-config">
         tailwind.config = {
+            darkMode: "class",
             theme: {
                 extend: {
-                    fontFamily: {
-                        sans: ['Lora', 'serif'],
-                        display: ['Playfair Display', 'serif'],
-                    },
                     colors: {
-                        paper: {
-                            50: '#FFFEFC',
-                            100: '#FDFBF7',
-                            200: '#F4F1EA',
-                            300: '#E8E1D5',
-                            400: '#D6CBB7',
-                        },
-                        ink: {
-                            DEFAULT: '#2C2621',
-                            light: '#5A524A',
-                            faint: '#8C8275',
-                        },
-                        leather: {
-                            DEFAULT: '#8C5A35',
-                            dark: '#5C3826',
-                            light: '#B67B54',
-                        }
+                        "on-tertiary-fixed": "#251a00", "outline": "#737973", "error": "#ba1a1a",
+                        "surface-container-highest": "#e4e2de", "secondary-fixed": "#d8e6d8",
+                        "surface-tint": "#4d6453", "surface-bright": "#fbf9f5",
+                        "primary-container": "#1b3022", "on-background": "#1b1c1a",
+                        "on-surface": "#1b1c1a", "surface-container": "#efeeea",
+                        "on-tertiary-fixed-variant": "#5a4400", "surface-container-low": "#f5f3ef",
+                        "background": "#fbf9f5", "primary-fixed": "#d0e9d4",
+                        "on-tertiary-container": "#af8e3a", "on-surface-variant": "#434843",
+                        "outline-variant": "#c3c8c1", "inverse-on-surface": "#f2f0ed",
+                        "on-primary": "#ffffff", "tertiary": "#1f1500", "on-tertiary": "#ffffff",
+                        "surface-dim": "#dbdad6", "inverse-primary": "#b4cdb8",
+                        "on-secondary-fixed": "#131e16", "surface-variant": "#e4e2de",
+                        "surface-container-lowest": "#ffffff", "surface-container-high": "#eae8e4",
+                        "secondary": "#556257", "error-container": "#ffdad6",
+                        "on-error": "#ffffff", "secondary-container": "#d5e3d5",
+                        "on-secondary-fixed-variant": "#3d4a40", "on-secondary-container": "#59665b",
+                        "secondary-fixed-dim": "#bccabd", "tertiary-container": "#382900",
+                        "primary": "#061b0e", "tertiary-fixed": "#ffdf96", "surface": "#fbf9f5",
+                        "inverse-surface": "#30312e", "tertiary-fixed-dim": "#e7c268",
+                        "on-primary-container": "#819986", "primary-fixed-dim": "#b4cdb8",
+                        "on-primary-fixed": "#0b2013", "on-error-container": "#93000a",
+                        "on-primary-fixed-variant": "#364c3c", "on-secondary": "#ffffff"
                     },
-                    boxShadow: {
-                        'paper': '0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01)',
-                        'inner-paper': 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.02)'
+                    spacing: {
+                        "gutter": "24px", "sm": "12px", "xl": "80px", "xs": "4px",
+                        "base": "8px", "md": "24px", "lg": "48px", "container-max": "1140px"
+                    },
+                    fontFamily: {
+                        "headline-sm": ["Libre Caslon Text"], "body-lg": ["Inter"],
+                        "display-lg-mobile": ["Libre Caslon Text"], "caption": ["Inter"],
+                        "display-lg": ["Libre Caslon Text"], "headline-md": ["Libre Caslon Text"],
+                        "label-md": ["Inter"], "title-lg": ["Inter"], "body-md": ["Inter"]
+                    },
+                    fontSize: {
+                        "headline-sm": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "body-lg": ["18px", {"lineHeight": "30px", "fontWeight": "400"}],
+                        "display-lg-mobile": ["32px", {"lineHeight": "40px", "fontWeight": "700"}],
+                        "caption": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "headline-md": ["32px", {"lineHeight": "40px", "fontWeight": "600"}],
+                        "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                        "title-lg": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
                     }
                 }
             }
         }
     </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .chat-bubble-ai {
+            position: relative;
+            background-color: transparent;
+        }
+        .chat-bubble-ai::before {
+            content: '';
+            position: absolute;
+            left: -12px;
+            top: 10px;
+            width: 2px;
+            height: calc(100% - 20px);
+            background-color: #061b0e;
+            opacity: 0.2;
+        }
+        .reflection-bar-fill {
+            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #c3c8c1; border-radius: 10px; }
+    </style>
 </head>
-<body class="bg-paper-200 text-ink min-h-[100dvh] flex items-center justify-center p-2 sm:p-4 antialiased overflow-hidden relative paper-texture">
-    
-    <!-- Shadow Overlay for depth -->
-    <div class="absolute top-0 left-0 w-full h-12 bg-gradient-to-b from-black/5 to-transparent z-0"></div>
+<body class="font-body-md text-on-surface bg-background flex flex-col min-h-[100dvh]">
 
-    <main class="w-full max-w-3xl rounded-sm shadow-paper bg-paper-100/95 backdrop-blur-md relative z-10 flex flex-col h-[92dvh] md:h-[85dvh] border border-paper-300">
-        
-        <!-- Header -->
-        <header class="p-5 border-b border-paper-300 flex justify-between items-center bg-paper-100/90 rounded-t-sm backdrop-blur-md z-20">
-            <div class="flex items-center gap-4">
-                <div class="text-leather-dark">
-                    <i data-lucide="book-open" class="w-6 h-6"></i>
-                </div>
-                <h1 class="text-2xl font-display font-bold tracking-tight text-ink">Diário de Leitura</h1>
-            </div>
+    <header class="bg-surface border-b border-outline-variant w-full top-0 sticky z-50">
+        <div class="flex justify-between items-center px-gutter py-sm max-w-container-max mx-auto h-16">
             <div class="flex items-center gap-2">
-                <button id="btn-help" class="p-2 text-ink-light hover:text-leather-dark hover:bg-paper-200 rounded-md transition-all" title="Como usar o app">
-                    <i data-lucide="info" class="w-5 h-5"></i>
-                </button>
-                <button id="btn-teacher-panel" class="p-2 text-ink-light hover:text-leather-dark hover:bg-paper-200 rounded-md transition-all" title="Painel do Professor">
-                    <i data-lucide="bookmark" class="w-5 h-5"></i>
-                </button>
+                <span class="material-symbols-outlined text-primary">menu_book</span>
+                <h1 class="font-headline-sm text-headline-sm text-primary" id="app-header-title">Diário de Leitura</h1>
             </div>
-        </header>
-
-        <!-- Help Modal (Responsive) -->
-        <div id="help-modal" class="fixed inset-0 bg-ink/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-            <div class="bg-paper-100 w-full max-w-lg rounded-lg shadow-2xl p-6 overflow-y-auto max-h-[90vh] relative">
-                <button id="btn-close-help" class="absolute top-2 right-2 text-ink-light hover:text-leather-dark">
-                    <i data-lucide="x" class="w-5 h-5"></i>
+            <div class="flex items-center gap-4">
+                <button id="btn-help" class="text-on-surface-variant hover:bg-secondary-container hover:text-on-secondary-container transition-colors p-2 rounded-full" title="Ajuda">
+                    <span class="material-symbols-outlined">help</span>
                 </button>
-                <h2 class="text-2xl font-display font-bold text-ink mb-4">Como usar o Diário de Leitura</h2>
-                <ol class="list-decimal list-inside space-y-3 text-ink">
-                    <li><strong>Digite seu nome</strong> no campo "Seu Nome".</li>
-                    <li><strong>Escolha o livro</strong> que está lendo na lista.</li>
-                    <li><strong>Clique "Abrir Diário"</strong> para iniciar a conversa.</li>
-                    <li>Responda à pergunta inicial e às próximas perguntas que aparecerem.</li>
-                    <li>O app vai analisar seu texto e fazer perguntas mais fáceis ou desafiadoras, ajudando você a refletir sobre a leitura.</li>
-                    <li>Quando terminar, sua resposta será salva na nuvem e você pode fechar o app.</li>
-                </ol>
-                <p class="mt-4 text-sm text-ink-light italic">Dica: escreva com calma, use palavras que expressam o que sentiu!</p>
+                <button id="btn-teacher-panel" class="text-primary hover:bg-secondary-container transition-colors p-2 rounded-full" title="Painel do Professor">
+                    <span class="material-symbols-outlined">analytics</span>
+                </button>
             </div>
         </div>
+    </header>
 
-        <!-- View: Book Selection -->
-        <section id="view-selection" class="flex-1 flex flex-col justify-center items-center p-8 space-y-10 fade-in relative z-10">
-            <div class="text-center space-y-4">
-                <h2 class="text-4xl font-display font-bold text-ink">Olá, Leitor.</h2>
-                <p class="text-ink-light text-lg italic">Qual obra vamos explorar hoje?</p>
+    <main class="flex-grow flex flex-col max-w-container-max mx-auto w-full px-gutter pt-md pb-[120px] relative">
+        
+        <!-- VIEW: SELECTION -->
+        <section id="view-selection" class="flex-1 flex flex-col justify-center items-center py-10 transition-opacity duration-300">
+            <div class="text-center mb-10">
+                <h2 class="font-display-lg text-display-lg-mobile md:text-display-lg text-primary mb-4">Olá, Leitor.</h2>
+                <p class="font-body-lg text-body-lg text-on-surface-variant">Qual obra vamos explorar hoje?</p>
             </div>
             
-            <div class="w-full max-w-md relative">
-                <label for="student-name" class="block text-sm font-semibold text-ink-light mb-2 ml-1 uppercase tracking-widest font-display">Seu Nome</label>
-                <input type="text" id="student-name" placeholder="Digite seu nome..." class="w-full bg-paper-50 border border-paper-400 rounded-md p-4 text-lg focus:outline-none focus:border-leather focus:ring-1 focus:ring-leather transition-all text-ink font-sans shadow-inner-paper mb-6">
+            <div class="w-full max-w-md bg-surface-container-low p-6 rounded-[24px] shadow-sm border border-outline-variant">
+                <div class="mb-6">
+                    <label for="student-name" class="block font-label-md text-label-md text-on-surface mb-2">Seu Nome</label>
+                    <input type="text" id="student-name" placeholder="Digite seu nome..." class="w-full bg-surface border border-outline-variant rounded-xl p-4 font-body-lg focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all">
+                </div>
                 
-                <label for="book-select" class="block text-sm font-semibold text-ink-light mb-2 ml-1 uppercase tracking-widest font-display">Selecione o Livro</label>
-                <div class="relative">
-                    <select id="book-select" class="w-full bg-paper-50 border border-paper-400 rounded-md p-4 text-lg appearance-none focus:outline-none focus:border-leather focus:ring-1 focus:ring-leather transition-all cursor-pointer text-ink font-sans shadow-inner-paper">
-                        <option value="" disabled selected>Escolha um livro da lista...</option>
-                        <!-- Livros serão carregados aqui dinamicamente pelo JavaScript -->
-                    </select>
-                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-ink-light">
-                        <i data-lucide="chevron-down" class="w-5 h-5"></i>
+                <div class="mb-8">
+                    <label for="book-select" class="block font-label-md text-label-md text-on-surface mb-2">Selecione o Livro</label>
+                    <div class="relative">
+                        <select id="book-select" class="w-full bg-surface border border-outline-variant rounded-xl p-4 font-body-lg appearance-none focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all cursor-pointer">
+                            <option value="" disabled selected>Escolha um livro da lista...</option>
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-4 flex items-center text-on-surface-variant">
+                            <span class="material-symbols-outlined">expand_more</span>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <button id="btn-start-diary" class="w-full max-w-md bg-leather-dark hover:bg-leather text-paper-50 font-semibold py-4 px-6 rounded-md shadow-md transform transition hover:-translate-y-1 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed mt-4 flex justify-center items-center gap-2 group border border-leather-dark" disabled>
-                <span class="font-display text-lg tracking-wide">Abrir Diário</span>
-                <i data-lucide="feather" class="w-5 h-5 group-hover:rotate-12 transition-transform"></i>
-            </button>
-        </section>
-
-        <!-- View: Chat / Diary -->
-        <section id="view-diary" class="flex-1 flex flex-col hidden fade-in h-full relative z-10 bg-paper-50/80">
-            <div class="flex-1 overflow-y-auto p-6 space-y-6" id="chat-container">
-                <!-- Chat messages will be injected here -->
-            </div>
-            
-            <div class="p-4 pb-5 md:p-6 border-t-2 border-paper-300 bg-paper-100/95 rounded-b-sm backdrop-blur-md shadow-[0_-10px_20px_-10px_rgba(0,0,0,0.05)] relative z-20">
-                <div class="relative flex items-end gap-3 max-w-4xl mx-auto">
-                    <textarea id="diary-input" rows="1" class="w-full bg-paper-50 border-2 border-paper-300 rounded-md py-4 px-5 focus:outline-none focus:border-leather focus:ring-2 focus:ring-leather/50 transition-all resize-none text-base placeholder:text-ink-faint font-sans shadow-inner-paper" placeholder="Escreva o que você sentiu, pensou ou imaginou..."></textarea>
-                    <button id="btn-send" class="bg-leather-dark hover:bg-leather text-paper-100 p-4 rounded-md transition-all shadow-md flex-shrink-0 flex items-center justify-center transform hover:scale-105 active:scale-95 border border-leather">
-                        <i data-lucide="pen-tool" class="w-5 h-5"></i>
-                    </button>
-                </div>
+                <button id="btn-start-diary" class="w-full bg-primary text-on-primary px-6 py-4 rounded-full font-label-md text-label-md text-lg hover:bg-primary-container hover:text-on-primary-container active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                    Abrir Diário
+                    <span class="material-symbols-outlined">edit_square</span>
+                </button>
             </div>
         </section>
 
-        <!-- View: Teacher Panel -->
-        <section id="view-teacher" class="flex-1 overflow-y-auto p-6 hidden fade-in bg-paper-200/90 rounded-b-sm relative z-20">
-            <div class="mb-8 flex items-center justify-between border-b border-paper-300 pb-4">
-                <div class="flex items-center gap-4">
-                    <button id="btn-back-teacher" class="p-2 bg-paper-300 text-ink rounded-md hover:bg-paper-400 transition-colors">
-                        <i data-lucide="arrow-left" class="w-5 h-5"></i>
-                    </button>
-                    <div>
-                        <h2 class="text-2xl font-display font-bold text-ink">Painel do Professor</h2>
-                        <p class="text-ink-light text-sm italic">Diagnóstico e Acompanhamento Bayesiano</p>
+        <!-- VIEW: DIARY -->
+        <section id="view-diary" class="hidden flex-col w-full max-w-3xl mx-auto">
+            <!-- Depth Indicator -->
+            <div class="sticky top-[80px] z-40 mb-lg">
+                <div class="bg-surface-container-lowest border border-outline-variant p-4 rounded-xl shadow-sm flex flex-col gap-2">
+                    <div class="flex justify-between items-center">
+                        <span class="font-label-md text-label-md text-on-surface-variant flex items-center gap-2">
+                            <span class="material-symbols-outlined text-sm">psychology</span>
+                            Profundidade da Reflexão
+                        </span>
+                        <span class="font-label-md text-label-md text-primary font-bold transition-all duration-300" id="depth-percentage">50%</span>
                     </div>
+                    <div class="w-full bg-secondary-container h-2 rounded-full overflow-hidden">
+                        <div class="reflection-bar-fill h-full bg-primary" id="depth-bar" style="width: 50%"></div>
+                    </div>
+                    <p class="text-[10px] text-on-surface-variant uppercase tracking-wider">A análise bayesiana está processando suas conexões literárias...</p>
+                </div>
+            </div>
+
+            <!-- Chat Area -->
+            <div class="flex flex-col gap-lg" id="chat-container">
+            </div>
+        </section>
+
+        <!-- VIEW: TEACHER -->
+        <section id="view-teacher" class="hidden w-full max-w-4xl mx-auto">
+            <div class="mb-8 flex items-center gap-4 border-b border-outline-variant pb-4">
+                <button id="btn-back-teacher" class="p-2 bg-secondary-container text-on-secondary-container rounded-full hover:bg-secondary hover:text-on-secondary transition-colors">
+                    <span class="material-symbols-outlined">arrow_back</span>
+                </button>
+                <div>
+                    <h2 class="font-headline-md text-headline-md text-primary">Painel do Professor</h2>
+                    <p class="font-body-md text-on-surface-variant">Diagnóstico e Acompanhamento Bayesiano</p>
                 </div>
             </div>
             
-            <div class="space-y-6 max-w-4xl mx-auto">
-                <div class="bg-paper-100 p-6 rounded-sm border border-paper-300 shadow-sm">
-                    <div class="flex justify-between items-center mb-6 border-b border-paper-300 pb-2">
-                        <h3 class="text-lg font-display font-bold flex items-center gap-2 text-ink">
-                            <i data-lucide="bar-chart-2" class="text-leather-dark w-5 h-5"></i>
-                            Visão Geral da Turma
-                        </h3>
+            <div class="space-y-6">
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-6">
+                    <div class="bg-primary-fixed p-6 rounded-[24px] shadow-sm">
+                        <span class="block text-on-primary-fixed-variant font-label-md mb-2">Leituras Ativas</span>
+                        <span id="active-readings-count" class="font-display-lg text-on-primary-fixed">0</span>
                     </div>
-                    
-                    <div class="grid grid-cols-2 md:grid-cols-3 gap-6">
-                        <div class="bg-paper-50 p-5 rounded-md border border-paper-300 shadow-inner-paper">
-                            <span class="block text-ink-light text-xs uppercase tracking-widest mb-2 font-display font-semibold">Leituras Ativas</span>
-                            <span id="active-readings-count" class="text-4xl font-display font-bold text-ink">0</span>
-                        </div>
-                        <div class="bg-paper-50 p-5 rounded-md border border-paper-300 shadow-inner-paper">
-                            <span class="block text-ink-light text-xs uppercase tracking-widest mb-2 font-display font-semibold">Engajamento Médio</span>
-                            <span id="average-engagement" class="text-4xl font-display font-bold text-green-800">0%</span>
-                        </div>
-                        <div class="bg-paper-50 p-5 rounded-md border border-paper-300 shadow-inner-paper col-span-2 md:col-span-1">
-                            <span class="block text-ink-light text-xs uppercase tracking-widest mb-2 font-display font-semibold">Alertas de Atenção</span>
-                            <span id="attention-alerts" class="text-4xl font-display font-bold text-red-800">0</span>
-                        </div>
+                    <div class="bg-secondary-fixed p-6 rounded-[24px] shadow-sm">
+                        <span class="block text-on-secondary-fixed-variant font-label-md mb-2">Engajamento Médio</span>
+                        <span id="average-engagement" class="font-display-lg text-on-secondary-fixed">0%</span>
+                    </div>
+                    <div class="bg-error-container p-6 rounded-[24px] shadow-sm col-span-2 md:col-span-1">
+                        <span class="block text-on-error-container font-label-md mb-2">Alertas de Atenção</span>
+                        <span id="attention-alerts" class="font-display-lg text-error">0</span>
                     </div>
                 </div>
 
-                <!-- Book Manager -->
-                <div class="bg-paper-100 p-6 rounded-sm border border-paper-300 shadow-sm mt-6 mb-6">
-                    <h3 class="text-lg font-display font-bold mb-4 flex items-center gap-2 text-ink border-b border-paper-300 pb-2">
-                        <i data-lucide="book-plus" class="text-leather-dark w-5 h-5"></i>
-                        Acervo de Livros da Turma
+                <div class="bg-surface-container-low p-6 rounded-[24px] border border-outline-variant shadow-sm mt-6">
+                    <h3 class="font-title-lg text-on-surface mb-4 flex items-center gap-2 border-b border-outline-variant pb-2">
+                        <span class="material-symbols-outlined">library_books</span>
+                        Acervo da Turma
                     </h3>
-                    <div class="flex gap-3 mb-4">
-                        <input type="text" id="new-book-input" placeholder="Digite o título do livro..." class="flex-1 bg-paper-50 border border-paper-300 rounded-md py-3 px-4 focus:outline-none focus:border-leather font-sans shadow-inner-paper">
-                        <button id="btn-add-book" class="bg-leather-dark hover:bg-leather text-paper-100 px-6 py-3 rounded-md transition-all shadow-sm font-semibold uppercase tracking-wider text-sm font-display whitespace-nowrap">Adicionar Livro</button>
+                    <div class="flex flex-col md:flex-row gap-3 mb-4">
+                        <input type="text" id="new-book-input" placeholder="Novo título do livro..." class="flex-1 bg-surface border border-outline-variant rounded-xl p-3 font-body-lg focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary">
+                        <button id="btn-add-book" class="bg-primary text-on-primary px-6 py-3 rounded-full font-label-md hover:bg-primary-container hover:text-on-primary-container transition-all">Adicionar Livro</button>
                     </div>
-                    <ul id="teacher-book-list" class="space-y-2 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
-                        <!-- Lista de livros gerenciável aparecerá aqui -->
-                    </ul>
+                    <ul id="teacher-book-list" class="space-y-2 max-h-60 overflow-y-auto pr-2 custom-scrollbar"></ul>
                 </div>
 
-                <div class="bg-paper-100 p-6 rounded-sm border border-paper-300 shadow-sm">
-                    <h3 class="text-lg font-display font-bold mb-4 flex items-center gap-2 text-ink border-b border-paper-300 pb-2">
-                        <i data-lucide="users" class="text-leather-dark w-5 h-5"></i>
+                <div class="bg-surface-container-low p-6 rounded-[24px] border border-outline-variant shadow-sm">
+                    <h3 class="font-title-lg text-on-surface mb-4 flex items-center gap-2 border-b border-outline-variant pb-2">
+                        <span class="material-symbols-outlined">group</span>
                         Diagnóstico Recente
                     </h3>
-                    <div class="space-y-4 mt-4" id="teacher-metrics-list">
-                        <!-- Mockup inicial -->
-                        <div class="p-4 bg-paper-50 rounded-md border border-paper-300 flex justify-between items-center hover:bg-paper-200 transition-colors cursor-pointer shadow-inner-paper">
-                            <div class="flex items-center gap-4">
-                                <div class="w-10 h-10 rounded-full bg-paper-300 border border-paper-400 flex items-center justify-center text-sm font-display font-bold text-ink">JS</div>
-                                <div>
-                                    <span class="font-medium font-display block text-ink text-lg">João Silva</span>
-                                    <span class="text-sm text-ink-light italic">O Pequeno Príncipe</span>
-                                </div>
-                            </div>
-                            <div class="text-right">
-                                <span class="text-xs px-3 py-1 bg-amber-100 text-amber-800 border border-amber-300 rounded-sm font-medium uppercase tracking-wider font-display">Aguardando Análise</span>
-                            </div>
-                        </div>
-                    </div>
+                    <div class="space-y-3 mt-4" id="teacher-metrics-list"></div>
                 </div>
             </div>
         </section>
 
     </main>
 
+    <!-- Sticky Input Area for Diary -->
+    <div id="sticky-input-area" class="fixed bottom-0 left-0 right-0 px-gutter z-50 bg-background/90 backdrop-blur-md pb-6 pt-4 hidden">
+        <div class="max-w-3xl mx-auto">
+            <div class="bg-surface border border-outline-variant shadow-lg rounded-2xl overflow-hidden focus-within:shadow-xl focus-within:border-primary transition-all">
+                <div class="p-4 flex flex-col gap-2">
+                    <textarea id="diary-input" rows="1" class="w-full bg-transparent border-none focus:ring-0 font-body-lg min-h-[60px] max-h-[150px] resize-none placeholder:text-outline-variant" placeholder="Escreva o que você sentiu, pensou ou imaginou..."></textarea>
+                    <div class="flex justify-between items-center pt-2">
+                        <p class="font-caption text-outline opacity-70 hidden sm:block">A IA lerá sua resposta para conduzir a conversa.</p>
+                        <button id="btn-send" class="bg-primary text-on-primary px-6 py-2 rounded-full font-label-md hover:bg-primary-container hover:text-on-primary-container active:scale-95 transition-all flex items-center gap-2 ml-auto">
+                            Enviar
+                            <span class="material-symbols-outlined text-sm">send</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help Modal -->
+    <div id="help-modal" class="fixed inset-0 bg-inverse-surface/60 backdrop-blur-sm z-[100] hidden flex items-center justify-center p-4 transition-opacity">
+        <div class="bg-surface w-full max-w-lg rounded-[24px] shadow-2xl p-8 relative">
+            <button id="btn-close-help" class="absolute top-4 right-4 text-on-surface-variant hover:text-primary p-2 rounded-full hover:bg-secondary-container transition-colors">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+            <h2 class="font-headline-sm text-primary mb-4">Como usar o App</h2>
+            <ol class="list-decimal list-inside space-y-3 font-body-md text-on-surface">
+                <li><strong>Digite seu nome</strong> e escolha um livro na lista inicial.</li>
+                <li><strong>Leia a pergunta</strong> do Tutor Literário.</li>
+                <li><strong>Escreva sua reflexão</strong> no campo inferior. Seja autêntico!</li>
+                <li><strong>Acompanhe a barra:</strong> a Inteligência Bayesiana avaliará a profundidade da sua resposta.</li>
+                <li>Ao final, seus resultados ficam salvos para o professor.</li>
+            </ol>
+        </div>
+    </div>
+
     <!-- Report Modal -->
-    <div id="report-modal" class="fixed inset-0 bg-ink/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-paper-100 w-full max-w-2xl rounded-sm shadow-2xl flex flex-col max-h-[90vh] border border-paper-300">
-            <div class="p-6 border-b border-paper-300 flex justify-between items-center bg-paper-50 rounded-t-sm">
-                <h3 class="text-2xl font-display font-bold text-ink" id="report-title">Relatório Bayesiano</h3>
-                <button id="btn-close-report" class="text-ink-light hover:text-red-700 transition-colors">
-                    <i data-lucide="x" class="w-6 h-6"></i>
+    <div id="report-modal" class="fixed inset-0 bg-inverse-surface/60 backdrop-blur-sm z-[100] hidden flex items-center justify-center p-4">
+        <div class="bg-surface w-full max-w-2xl rounded-[24px] shadow-2xl flex flex-col max-h-[90vh]">
+            <div class="p-6 flex justify-between items-center border-b border-outline-variant">
+                <h3 class="font-headline-sm text-primary" id="report-title">Relatório do Aluno</h3>
+                <button id="btn-close-report" class="text-on-surface-variant hover:text-primary p-2 rounded-full hover:bg-secondary-container transition-colors">
+                    <span class="material-symbols-outlined">close</span>
                 </button>
             </div>
-            <div class="p-6 overflow-y-auto flex-1 font-sans text-ink space-y-6" id="report-content">
-                <!-- Conteúdo do Relatório -->
-            </div>
-            <div class="p-6 border-t border-paper-300 bg-paper-50 rounded-b-sm flex justify-end">
-                <button id="btn-export-report" class="bg-leather-dark hover:bg-leather text-paper-100 px-6 py-3 rounded-md transition-all shadow-sm font-semibold uppercase tracking-wider text-sm font-display flex items-center gap-2">
-                    <i data-lucide="download" class="w-4 h-4"></i>
-                    Baixar Relatório (.txt)
+            <div class="p-6 overflow-y-auto flex-1 space-y-6" id="report-content"></div>
+            <div class="p-6 border-t border-outline-variant flex justify-end">
+                <button id="btn-export-report" class="bg-primary text-on-primary px-6 py-3 rounded-full font-label-md hover:bg-primary-container hover:text-on-primary-container transition-all flex items-center gap-2">
+                    <span class="material-symbols-outlined">download</span> Baixar TXT
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- Supabase CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="app.js"></script>
 </body>
