@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     lucide.createIcons();
 
     // ----- SUPABASE CLIENT ----- //
-    const SUPABASE_URL = 'https://zmiyiuhevujxjcukdpe.supabase.co';
+    const SUPABASE_URL = 'https://zmiyiuhevujyxjcukdpe.supabase.co';
     const TEACHER_PASSWORD = 'Zk7!pL9x$Qe2';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InptaXlpdWhldnVqeXhqY3VrZHBlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3Mjg0MjgsImV4cCI6MjA5NTMwNDQyOH0.fDzK49FEKXvCNs6X7RYv-qvj-eYJm7pVTbGZ5twvOR4';
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
