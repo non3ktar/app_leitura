@@ -59,10 +59,34 @@
                 </div>
                 <h1 class="text-2xl font-display font-bold tracking-tight text-ink">Diário de Leitura</h1>
             </div>
-            <button id="btn-teacher-panel" class="p-2 text-ink-light hover:text-leather-dark hover:bg-paper-200 rounded-md transition-all" title="Painel do Professor">
-                <i data-lucide="bookmark" class="w-5 h-5"></i>
-            </button>
+            <div class="flex items-center gap-2">
+                <button id="btn-help" class="p-2 text-ink-light hover:text-leather-dark hover:bg-paper-200 rounded-md transition-all" title="Como usar o app">
+                    <i data-lucide="info" class="w-5 h-5"></i>
+                </button>
+                <button id="btn-teacher-panel" class="p-2 text-ink-light hover:text-leather-dark hover:bg-paper-200 rounded-md transition-all" title="Painel do Professor">
+                    <i data-lucide="bookmark" class="w-5 h-5"></i>
+                </button>
+            </div>
         </header>
+
+        <!-- Help Modal (Responsive) -->
+        <div id="help-modal" class="fixed inset-0 bg-ink/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+            <div class="bg-paper-100 w-full max-w-lg rounded-lg shadow-2xl p-6 overflow-y-auto max-h-[90vh] relative">
+                <button id="btn-close-help" class="absolute top-2 right-2 text-ink-light hover:text-leather-dark">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+                <h2 class="text-2xl font-display font-bold text-ink mb-4">Como usar o Diário de Leitura</h2>
+                <ol class="list-decimal list-inside space-y-3 text-ink">
+                    <li><strong>Digite seu nome</strong> no campo "Seu Nome".</li>
+                    <li><strong>Escolha o livro</strong> que está lendo na lista.</li>
+                    <li><strong>Clique "Abrir Diário"</strong> para iniciar a conversa.</li>
+                    <li>Responda à pergunta inicial e às próximas perguntas que aparecerem.</li>
+                    <li>O app vai analisar seu texto e fazer perguntas mais fáceis ou desafiadoras, ajudando você a refletir sobre a leitura.</li>
+                    <li>Quando terminar, sua resposta será salva na nuvem e você pode fechar o app.</li>
+                </ol>
+                <p class="mt-4 text-sm text-ink-light italic">Dica: escreva com calma, use palavras que expressam o que sentiu!</p>
+            </div>
+        </div>
 
         <!-- View: Book Selection -->
         <section id="view-selection" class="flex-1 flex flex-col justify-center items-center p-8 space-y-10 fade-in relative z-10">

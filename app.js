@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // ----- SUPABASE CLIENT ----- //
     const SUPABASE_URL = 'https://zmiyiuhevujxjcukdpe.supabase.co';
+    const TEACHER_PASSWORD = 'Zk7!pL9x$Qe2';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InptaXlpdWhldnVqeXhqY3VrZHBlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3Mjg0MjgsImV4cCI6MjA5NTMwNDQyOH0.fDzK49FEKXvCNs6X7RYv-qvj-eYJm7pVTbGZ5twvOR4';
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -32,10 +33,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     const teacherMetricsList = document.getElementById('teacher-metrics-list');
     
     // Modal DOM
-    const reportModal = document.getElementById('report-modal');
-    const btnCloseReport = document.getElementById('btn-close-report');
-    const reportContent = document.getElementById('report-content');
-    const btnExportReport = document.getElementById('btn-export-report');
+    const helpModal = document.getElementById('help-modal');
+    const btnHelp = document.getElementById('btn-help');
+    const btnCloseHelp = document.getElementById('btn-close-help');
+    
+    // Abrir/Fechar Help Modal
+    btnHelp.addEventListener('click', () => helpModal.classList.remove('hidden'));
+    btnCloseHelp.addEventListener('click', () => helpModal.classList.add('hidden'));
+
 
     // Estado Global
     let currentBook = null;
@@ -212,7 +217,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     btnTeacherPanel.addEventListener('click', async () => {
         const pw = prompt('Acesso restrito. Senha do Professor (digite "admin"):');
-        if (pw === 'admin') {
+        if (pw === TEACHER_PASSWORD) {
             teacherMetricsList.innerHTML = '<p class="text-ink-light italic p-4 text-center">Buscando dados na nuvem...</p>';
             showView('teacher');
             await loadSessions(); // Busca atualizada da nuvem
