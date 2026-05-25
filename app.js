@@ -37,6 +37,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     const btnHelp = document.getElementById('btn-help');
     const btnCloseHelp = document.getElementById('btn-close-help');
     
+    const reportModal = document.getElementById('report-modal');
+    const reportContent = document.getElementById('report-content');
+    const btnCloseReport = document.getElementById('btn-close-report');
+    const btnExportReport = document.getElementById('btn-export-report');
+
     // Abrir/Fechar Help Modal
     btnHelp.addEventListener('click', () => helpModal.classList.remove('hidden'));
     btnCloseHelp.addEventListener('click', () => helpModal.classList.add('hidden'));
