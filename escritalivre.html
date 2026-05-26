@@ -756,9 +756,9 @@ starBtns.forEach(btn => {
 const SUPABASE_URL = 'https://zmiyiuhevujyxjcukdpe.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InptaXlpdWhldnVqeXhqY3VrZHBlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3Mjg0MjgsImV4cCI6MjA5NTMwNDQyOH0.fDzK49FEKXvCNs6X7RYv-qvj-eYJm7pVTbGZ5twvOR4';
 
-let supabase;
+let supabaseClient;
 if (window.supabase) {
-  supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   console.log("Supabase client criado com sucesso!");
 } else {
   console.error("ERRO CRÍTICO: window.supabase não foi carregado!");
@@ -769,7 +769,7 @@ if (window.supabase) {
 async function loadBooks() {
   const select = document.getElementById('book-select');
   
-  if (!supabase) {
+  if (!supabaseClient) {
       select.innerHTML = '<option value="">Erro ao carregar banco de dados.</option>';
       return;
   }
@@ -783,7 +783,7 @@ async function loadBooks() {
 
   try {
     console.log("Iniciando carregamento do acervo...");
-    const { data: books, error } = await supabase.from('books').select('*').order('created_at', { ascending: true });
+    const { data: books, error } = await supabaseClient.from('books').select('*').order('created_at', { ascending: true });
     console.log("Acervo recebido:", books, error);
     
     clearInterval(spinnerInterval);
@@ -851,7 +851,7 @@ document.getElementById('btn-submit').addEventListener('click', async () => {
     diagnosis: finalDiagnosis
   };
 
-  const { error } = await supabase.from('sessions').insert([currentSession]);
+  const { error } = await supabaseClient.from('sessions').insert([currentSession]);
   
   btn.disabled = false;
   btn.textContent = "✦ Guardar no Diário ✦";
