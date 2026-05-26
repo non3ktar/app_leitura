@@ -402,20 +402,28 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // ----- PAINEL DO PROFESSOR ----- //
     function updateMetrics(){
-        // Active readings count: total sessions
-        const activeCount = allSessions.length;
+        const freeWritingSessions = allSessions.filter(s => s.diagnosis && s.diagnosis.startsWith('Humor:'));
+        const guidedSessions = allSessions.filter(s => !(s.diagnosis && s.diagnosis.startsWith('Humor:')));
+
+        // Active readings count: guided sessions
         const activeSpan = document.getElementById('active-readings-count');
-        if(activeSpan) activeSpan.textContent = activeCount;
-        // Average engagement: average final_probability *100
+        if(activeSpan) activeSpan.textContent = guidedSessions.length;
+
+        // Free writing count
+        const freeSpan = document.getElementById('free-writing-count');
+        if(freeSpan) freeSpan.textContent = freeWritingSessions.length;
+
+        // Average engagement: average final_probability * 100 (only guided)
         let avg = 0;
-        if(activeCount>0){
-            const sum = allSessions.reduce((acc,s)=>acc + (s.final_probability||0),0);
-            avg = (sum/activeCount)*100;
+        if(guidedSessions.length > 0){
+            const sum = guidedSessions.reduce((acc,s)=>acc + (s.final_probability||0),0);
+            avg = (sum/guidedSessions.length)*100;
         }
         const avgSpan = document.getElementById('average-engagement');
         if(avgSpan) avgSpan.textContent = avg.toFixed(0)+'%';
-        // Attention alerts: count of sessions with low probability (<0.4)
-        const alerts = allSessions.filter(s=> (s.final_probability||0) < 0.4).length;
+
+        // Attention alerts: count of guided sessions with low probability (<0.4)
+        const alerts = guidedSessions.filter(s=> (s.final_probability||0) < 0.4).length;
         const alertsSpan = document.getElementById('attention-alerts');
         if(alertsSpan) alertsSpan.textContent = alerts;
     }
