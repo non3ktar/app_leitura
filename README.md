@@ -44,3 +44,8 @@ O projeto pode ser publicado livremente em provedores estáticos como **GitHub P
   - Atualização do motor do Painel do Professor para exibir relatórios da Escrita Livre lado a lado com os Relatórios Bayesianos.
   - Refatoração dos cálculos de Métricas (Engajamento Médio focado apenas nas leituras guiadas).
   - Correção Crítica de Conflito de Escopo Global (`window.supabase`).
+- **v2.2.0 (Galeria de Leitores - Maio/2026)**:
+  - Implementação da **Galeria de Leitores** (`galeria.html`) que exibe de forma gamificada o histórico de leitura da turma.
+  - Geração automática de avatares baseados em seed usando a API DiceBear.
+  - Distribuição automática de Insígnias e Títulos (Aprendiz, Aventureiro, Especialista, Mestre) dependendo da quantidade de livros lidos (base de dados Supabase).
+  - UI Pro Max, Glassmorphism e Tema Escuro elegante para incentivar e engajar os alunos a lerem mais.
