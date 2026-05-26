@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Diário Encantado de Leituras</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600&family=IM+Fell+English:ital@0;1&family=Spectral:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -698,7 +697,9 @@
 
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+console.log("Iniciando script da Escrita Livre...");
 // Stars
 (function() {
   const bg = document.getElementById('stars-bg');
@@ -754,11 +755,24 @@ starBtns.forEach(btn => {
 // --- SUPABASE CLIENT ---
 const SUPABASE_URL = 'https://zmiyiuhevujyxjcukdpe.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InptaXlpdWhldnVqeXhqY3VrZHBlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3Mjg0MjgsImV4cCI6MjA5NTMwNDQyOH0.fDzK49FEKXvCNs6X7RYv-qvj-eYJm7pVTbGZ5twvOR4';
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let supabase;
+if (window.supabase) {
+  supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  console.log("Supabase client criado com sucesso!");
+} else {
+  console.error("ERRO CRÍTICO: window.supabase não foi carregado!");
+  alert("Erro de conexão com o banco de dados. Verifique a internet ou o cache do navegador.");
+}
 
 // Load books from Supabase
 async function loadBooks() {
   const select = document.getElementById('book-select');
+  
+  if (!supabase) {
+      select.innerHTML = '<option value="">Erro ao carregar banco de dados.</option>';
+      return;
+  }
   
   // Spinner animation for the option text
   let dots = 0;
