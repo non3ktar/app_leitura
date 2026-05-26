@@ -311,8 +311,11 @@
                 // Processar dados: agrupar por aluno e contar livros únicos
                 const studentsMap = {};
                 sessions.forEach(session => {
-                    const name = session.student_name ? session.student_name.trim() : "Anônimo";
+                    let name = session.student_name ? session.student_name.trim() : "Anônimo";
                     const book = session.book ? session.book.trim() : "Desconhecido";
+                    
+                    // Remove informações de turma entre parênteses no final do nome, ex: "Sérgio (7ºA)" -> "Sérgio"
+                    name = name.replace(/\s*\(.*?\)$/, '').trim();
                     
                     // Normaliza nome para evitar duplicações de case
                     const normalizedName = name.toLowerCase().replace(/(?:^|\s)\S/g, a => a.toUpperCase());
