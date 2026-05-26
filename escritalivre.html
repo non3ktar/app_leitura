@@ -851,15 +851,23 @@ document.getElementById('btn-submit').addEventListener('click', async () => {
     diagnosis: finalDiagnosis
   };
 
-  const { error } = await supabaseClient.from('sessions').insert([currentSession]);
-  
-  btn.disabled = false;
-  btn.textContent = "✦ Guardar no Diário ✦";
+  try {
+    const { error } = await supabaseClient.from('sessions').insert([currentSession]);
+    
+    btn.disabled = false;
+    btn.textContent = "✦ Guardar no Diário ✦";
 
-  if(error) {
-      alert("Houve uma falha mágica ao tentar guardar. Tente novamente!");
-      console.error(error);
-      return;
+    if(error) {
+        alert("Erro de Banco de Dados:\n" + (error.message || JSON.stringify(error)));
+        console.error("Erro DB:", error);
+        return;
+    }
+  } catch(e) {
+    alert("Erro no código:\n" + e.message);
+    console.error("Erro JS:", e);
+    btn.disabled = false;
+    btn.textContent = "✦ Guardar no Diário ✦";
+    return;
   }
 
   // Show confirmation
