@@ -80,10 +80,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // ----- INTEGRAÇÃO GROQ API (VIA NETLIFY FUNCTIONS) ----- //
     async function getGroqResponse(studentName, bookTitle, history, currentInput) {
-        const systemPrompt = `Você é um Tutor Literário especializado em conversar com estudantes do Ensino Fundamental II.
-O aluno chama-se ${studentName} e está lendo o livro "${bookTitle}".
-Seu objetivo é conversar de forma amigável, incentivando o aluno a falar sobre a história, personagens e o que achou da obra.
-Responda de forma curta (máximo de 2 a 3 frases) e sempre termine com UMA única pergunta para continuar a conversa. Não dê as respostas prontas.`;
+        const systemPrompt = `Você é um Tutor Literário pedagógico conversando com o aluno ${studentName} do Ensino Fundamental II sobre o livro "${bookTitle}".
+REGRAS OBRIGATÓRIAS:
+1. JAMAIS conte a história, dê resumos, spoilers ou revele características dos personagens. Se o aluno pedir resumos ou perguntar o que acontece, recuse educadamente e diga que a magia da leitura está em descobrir por si mesmo.
+2. O seu papel NUNCA é substituir a leitura, mas sim instigar a reflexão crítica do aluno.
+3. Se o aluno tentar "trapacear" para obter respostas, faça perguntas sobre como ele se sentiria no lugar do protagonista, forçando a criatividade.
+4. Responda sempre de forma curta e amigável (máximo de 2 a 3 frases) e termine com UMA única pergunta reflexiva.`;
 
         try {
             const apiMessages = [
