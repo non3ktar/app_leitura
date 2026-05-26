@@ -758,16 +758,43 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // Load books from Supabase
 async function loadBooks() {
-  const { data: books, error } = await supabase.from('books').select('*').order('created_at', { ascending: true });
   const select = document.getElementById('book-select');
-  select.innerHTML = '<option value="" disabled selected>— Escolha o livro —</option>';
-  if (!error && books) {
-    books.forEach(book => {
-      const opt = document.createElement('option');
-      opt.value = book.title;
-      opt.textContent = book.title;
-      select.appendChild(opt);
-    });
+  
+  // Spinner animation for the option text
+  let dots = 0;
+  const spinnerInterval = setInterval(() => {
+    dots = (dots + 1) % 4;
+    select.innerHTML = `<option value="">— Carregando acervo da turma${'*'.repeat(dots)} —</option>`;
+  }, 400);
+
+  try {
+    console.log("Iniciando carregamento do acervo...");
+    const { data: books, error } = await supabase.from('books').select('*').order('created_at', { ascending: true });
+    console.log("Acervo recebido:", books, error);
+    
+    clearInterval(spinnerInterval);
+    
+    select.innerHTML = '<option value="" disabled selected>— Escolha o livro —</option>';
+    
+    if (error) {
+      console.error(error);
+      select.innerHTML = '<option value="">Erro ao carregar livros. Tente F5.</option>';
+      return;
+    }
+
+    if (books && books.length > 0) {
+      books.forEach(book => {
+        const opt = document.createElement('option');
+        opt.value = book.title;
+        opt.textContent = book.title;
+        select.appendChild(opt);
+      });
+    } else {
+      select.innerHTML = '<option value="" disabled selected>Nenhum livro cadastrado pelo professor.</option>';
+    }
+  } catch(err) {
+    clearInterval(spinnerInterval);
+    select.innerHTML = '<option value="">Falha na conexão.</option>';
   }
 }
 loadBooks();
