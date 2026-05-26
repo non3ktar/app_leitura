@@ -69,23 +69,56 @@ document.addEventListener('DOMContentLoaded', async () => {
     let books = [];
     let allSessions = [];
 
-    // Perguntas Universais (Curingas)
-    const genericQuestions = {
-        facil: [
-            "Qual personagem dessa história mais chamou sua atenção até agora e por quê?",
-            "Teve alguma parte que você achou engraçada, estranha ou triste? O que aconteceu?",
-            "Se você estivesse no lugar do protagonista, você teria tomado a mesma atitude?",
-            "Qual é o cenário ou lugar dessa história que você achou mais interessante?",
-            "Como você acha que a história vai terminar? Me conta sua teoria."
-        ],
-        avancado: [
-            "Se você pudesse analisar as decisões do protagonista sob a ótica dos problemas reais da nossa sociedade, o que você diria?",
-            "Como o ambiente em que a história se passa afeta os valores ou a moralidade dos personagens?",
-            "Você percebe alguma crítica social escondida (ou escancarada) que o autor tentou transmitir na obra?",
-            "De que maneira a falta de comunicação ou os segredos entre os personagens geram os conflitos da história?",
-            "Acredita que o dilema enfrentado nesta obra tem alguma solução fácil na vida real? Justifique sua resposta."
-        ]
-    };
+    // ----- INTEGRAÇÃO GROQ API (VIA NETLIFY FUNCTIONS) ----- //
+    async function getGroqResponse(studentName, bookTitle, history, currentInput, probLevel) {
+        const isAdvanced = probLevel >= 0.6;
+        const systemPrompt = `Você é um Tutor Literário especializado em incentivar o pensamento crítico de estudantes do Ensino Fundamental II.
+O aluno chama-se ${studentName} e está lendo o livro "${bookTitle}".
+Seu objetivo é fazer perguntas que estimulem a reflexão sobre a obra, personagens, enredo ou críticas sociais.
+${isAdvanced ? 'O aluno está demonstrando leitura profunda. Faça uma pergunta mais analítica e desafiadora.' : 'O aluno precisa de incentivo. Faça uma pergunta mais acessível focada em sentimentos ou na trama principal.'}
+Responda de forma amigável, curta (máximo de 2 a 3 frases) e sempre termine com UMA única pergunta reflexiva sobre o livro. Não dê as respostas prontas.`;
+
+        try {
+            const apiMessages = [
+                { role: "system", content: systemPrompt }
+            ];
+            
+            history.forEach(h => {
+                apiMessages.push({ role: "assistant", content: h.question });
+                apiMessages.push({ role: "user", content: h.answer });
+            });
+
+            // Chama a função serverless do Netlify para ocultar a chave da API
+            const response = await fetch('/.netlify/functions/groq', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    model: 'llama3-8b-8192',
+                    messages: apiMessages,
+                    temperature: 0.7,
+                    max_tokens: 250
+                })
+            });
+
+            if (!response.ok) throw new Error('Groq API Error via Netlify Function');
+            
+            const data = await response.json();
+            return data.choices[0].message.content;
+        } catch (error) {
+            console.error('Groq Error:', error);
+            // Fallback questions
+            const fallbackQuestions = isAdvanced ? [
+                "Você percebe alguma crítica social escondida que o autor tentou transmitir na obra?",
+                "De que maneira as decisões dos personagens refletem problemas do nosso mundo real?"
+            ] : [
+                "Qual personagem dessa história mais chamou sua atenção até agora e por quê?",
+                "Teve alguma parte que você achou engraçada ou estranha? O que aconteceu?"
+            ];
+            return "Interessante... " + fallbackQuestions[Math.floor(Math.random() * fallbackQuestions.length)];
+        }
+    }
 
     // ----- INTEGRAÇÃO SUPABASE ----- //
     
@@ -271,12 +304,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if(this.value === '') this.style.height = 'auto';
     });
 
-    function getNextQuestion(probLevel) {
-        const isAdvanced = probLevel >= 0.6;
-        const list = isAdvanced ? genericQuestions.avancado : genericQuestions.facil;
-        const qIndex = questionsAsked % list.length;
-        return list[qIndex];
-    }
+
 
     function addMessage(sender, text) {
         const msgDiv = document.createElement('div');
@@ -316,6 +344,32 @@ document.addEventListener('DOMContentLoaded', async () => {
         setTimeout(() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }), 100);
     }
 
+    function addTypingIndicator(id) {
+        const msgDiv = document.createElement('div');
+        msgDiv.id = id;
+        msgDiv.className = `flex flex-col gap-2 max-w-3xl animate-in fade-in slide-in-from-bottom-4 duration-700`;
+        msgDiv.innerHTML = `
+            <div class="flex items-center gap-2 mb-1">
+                <div class="w-6 h-6 bg-primary-container rounded-full flex items-center justify-center">
+                    <span class="material-symbols-outlined text-[14px] text-on-primary">auto_awesome</span>
+                </div>
+                <span class="font-label-md text-label-md text-primary font-semibold">Tutor Literário</span>
+            </div>
+            <div class="chat-bubble-ai px-4 py-2 flex items-center gap-1 w-20">
+                <div class="w-2 h-2 bg-on-surface-variant rounded-full animate-bounce"></div>
+                <div class="w-2 h-2 bg-on-surface-variant rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
+                <div class="w-2 h-2 bg-on-surface-variant rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+            </div>
+        `;
+        chatContainer.appendChild(msgDiv);
+        setTimeout(() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }), 100);
+    }
+
+    function removeTypingIndicator(id) {
+        const el = document.getElementById(id);
+        if (el) el.remove();
+    }
+
     function initChat() {
         chatContainer.innerHTML = '';
         currentQuestionText = `Olá, ${currentStudent}! Que bom te ver por aqui. Vejo que você está lendo **"${currentBook}"**.\n\nPara começarmos, qual parte desse livro mexeu mais com os seus sentimentos ou chamou sua atenção até agora?`;
@@ -346,6 +400,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         diaryInput.value = '';
         diaryInput.style.height = 'auto';
         
+        btnSend.disabled = true;
+        diaryInput.disabled = true;
+        
         const newProb = updateBayesianProbability(text);
         
         // --- NEW: Animate Depth Bar --- //
@@ -364,40 +421,39 @@ document.addEventListener('DOMContentLoaded', async () => {
             probabilityAfter: newProb
         });
 
-        const nextQ = getNextQuestion(newProb);
         questionsAsked++;
 
-        setTimeout(async () => {
-            let feedback = newProb >= 0.6 
-                ? "*Que análise interessante! Vejo que você está refletindo profundamente.* \n\n"
-                : "*Obrigado por compartilhar. Vamos pensar um pouco mais:* \n\n";
+        if (questionsAsked > 2) {
+            // Finaliza a sessão e salva no Supabase
+            addMessage('app', "*Salvando seus registros na nuvem... aguarde.*");
             
-            if (questionsAsked > 2) {
-                // Finaliza a sessão e salva no Supabase
-                addMessage('app', "*Salvando seus registros na nuvem... aguarde.*");
-                btnSend.disabled = true;
-                diaryInput.disabled = true;
-                
-                currentSession.final_probability = newProb;
-                currentSession.diagnosis = getDiagnosis(newProb).text;
-                
-                const { error } = await supabase.from('sessions').insert([currentSession]);
-                // After inserting, update metrics
-                // (Metrics will be refreshed after handleSend wrapper)
-                
-                if (!error) {
-                    addMessage('app', "Muito obrigado por compartilhar suas ideias! O registro do seu diário de hoje foi salvo com sucesso. Pode fechar o app e até a próxima leitura!");
-                    diaryInput.placeholder = "Diário salvo e concluído por hoje.";
-                } else {
-                    addMessage('app', "Houve um erro ao salvar na nuvem. Mas não se preocupe, o professor foi notificado.");
-                    console.error(error);
-                }
-                
+            currentSession.final_probability = newProb;
+            currentSession.diagnosis = getDiagnosis(newProb).text;
+            
+            const { error } = await supabase.from('sessions').insert([currentSession]);
+            
+            if (!error) {
+                addMessage('app', "Muito obrigado por compartilhar suas ideias! O registro do seu diário de hoje foi salvo com sucesso. Pode fechar o app e até a próxima leitura!");
+                diaryInput.placeholder = "Diário salvo e concluído por hoje.";
             } else {
-                currentQuestionText = feedback + nextQ;
-                addMessage('app', currentQuestionText);
+                addMessage('app', "Houve um erro ao salvar na nuvem. Mas não se preocupe, o professor foi notificado.");
+                console.error(error);
             }
-        }, 1500);
+        } else {
+            const typingId = 'typing-' + Date.now();
+            addTypingIndicator(typingId);
+            
+            const aiResponse = await getGroqResponse(currentStudent, currentBook, currentSession.history, text, newProb);
+            
+            removeTypingIndicator(typingId);
+            
+            currentQuestionText = aiResponse;
+            addMessage('app', currentQuestionText);
+            
+            btnSend.disabled = false;
+            diaryInput.disabled = false;
+            diaryInput.focus();
+        }
     }
 
     // ----- PAINEL DO PROFESSOR ----- //
