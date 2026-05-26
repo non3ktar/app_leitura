@@ -431,7 +431,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         
                 allSessions.forEach((session, index) => {
-            const diag = getDiagnosis(session.final_probability);
+            const isFreeWriting = session.diagnosis && session.diagnosis.startsWith('Humor:');
+            const diag = isFreeWriting ? { color: 'bg-secondary-container text-on-secondary-container', text: 'Escrita Livre' } : getDiagnosis(session.final_probability);
             const initials = session.student_name.substring(0,2).toUpperCase();
             
             const div = document.createElement('div');
@@ -479,40 +480,67 @@ document.addEventListener('DOMContentLoaded', async () => {
         const diag = getDiagnosis(session.final_probability);
         
         let historyHTML = '';
-        session.history.forEach((h, i) => {
-            const probPct = (h.probabilityAfter * 100).toFixed(1);
-            historyHTML += `
-                <div class="border-l-2 border-primary pl-4 mb-6">
-                    <p class="text-sm font-label-md text-primary mb-1">Pergunta ${i+1}:</p>
-                    <p class="text-on-surface text-sm mb-3 italic">${h.question.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}</p>
-                    <p class="text-sm font-label-md text-on-surface mb-1">Resposta do Aluno:</p>
-                    <p class="text-on-surface p-4 bg-surface-container rounded-xl border border-outline-variant mb-2">${h.answer}</p>
-                    <p class="text-xs text-on-surface-variant text-right">Profundidade Bayesiana Após Resposta: <span class="font-bold text-primary">${probPct}%</span></p>
+        const isFreeWriting = session.diagnosis && session.diagnosis.startsWith('Humor:');
+
+        if (isFreeWriting) {
+            historyHTML = `
+                <div class="border-l-2 border-secondary pl-4 mb-6">
+                    <p class="text-sm font-label-md text-secondary mb-1">📝 Relato de Escrita Livre Encantada</p>
+                    <p class="text-on-surface p-4 bg-surface-container rounded-xl border border-outline-variant mb-2">${session.history[0].answer.replace(/\n/g, '<br>')}</p>
                 </div>
             `;
-        });
+            
+            reportContent.innerHTML = `
+                <div class="border-b border-outline-variant pb-4 mb-4">
+                    <h4 class="text-[28px] font-headline-md text-primary mb-1">${session.student_name}</h4>
+                    <p class="text-on-surface-variant italic font-body-md">${session.book} | Data: ${session.date}</p>
+                </div>
+                
+                <div class="bg-secondary-container p-6 rounded-2xl border border-outline-variant mb-6 shadow-sm">
+                    <span class="block text-xs uppercase tracking-widest text-on-secondary-container font-label-md mb-2 opacity-80">Detalhes da Escrita Livre</span>
+                    <span class="font-headline-sm text-lg text-on-secondary-container block">${session.diagnosis}</span>
+                </div>
+                
+                <div class="font-body-md">
+                    ${historyHTML}
+                </div>
+            `;
+        } else {
+            session.history.forEach((h, i) => {
+                const probPct = (h.probabilityAfter * 100).toFixed(1);
+                historyHTML += `
+                    <div class="border-l-2 border-primary pl-4 mb-6">
+                        <p class="text-sm font-label-md text-primary mb-1">Pergunta ${i+1}:</p>
+                        <p class="text-on-surface text-sm mb-3 italic">${h.question.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}</p>
+                        <p class="text-sm font-label-md text-on-surface mb-1">Resposta do Aluno:</p>
+                        <p class="text-on-surface p-4 bg-surface-container rounded-xl border border-outline-variant mb-2">${h.answer.replace(/\n/g, '<br>')}</p>
+                        <p class="text-xs text-on-surface-variant text-right">Profundidade Bayesiana Após Resposta: <span class="font-bold text-primary">${probPct}%</span></p>
+                    </div>
+                `;
+            });
 
-        reportContent.innerHTML = `
-            <div class="border-b border-outline-variant pb-4 mb-4">
-                <h4 class="text-[28px] font-headline-md text-primary mb-1">${session.student_name}</h4>
-                <p class="text-on-surface-variant italic font-body-md">${session.book} | Data: ${session.date}</p>
-            </div>
-            
-            <div class="bg-surface-container p-6 rounded-2xl border border-outline-variant mb-6 flex flex-col md:flex-row justify-between items-center shadow-sm">
-                <div class="mb-4 md:mb-0 text-center md:text-left">
-                    <span class="block text-xs uppercase tracking-widest text-on-surface-variant font-label-md mb-1">Diagnóstico Final do Algoritmo</span>
-                    <span class="font-headline-sm text-lg ${diag.color.split(' ')[0]}">${diag.text}</span>
+            reportContent.innerHTML = `
+                <div class="border-b border-outline-variant pb-4 mb-4">
+                    <h4 class="text-[28px] font-headline-md text-primary mb-1">${session.student_name}</h4>
+                    <p class="text-on-surface-variant italic font-body-md">${session.book} | Data: ${session.date}</p>
                 </div>
-                <div class="text-center md:text-right">
-                    <span class="block text-xs uppercase tracking-widest text-on-surface-variant font-label-md mb-1">Aproveitamento</span>
-                    <span class="font-display-lg text-primary">${(session.final_probability * 100).toFixed(1)}%</span>
+                
+                <div class="bg-surface-container p-6 rounded-2xl border border-outline-variant mb-6 flex flex-col md:flex-row justify-between items-center shadow-sm">
+                    <div class="mb-4 md:mb-0 text-center md:text-left">
+                        <span class="block text-xs uppercase tracking-widest text-on-surface-variant font-label-md mb-1">Diagnóstico Final do Algoritmo</span>
+                        <span class="font-headline-sm text-lg ${diag.color.split(' ')[0]}">${diag.text}</span>
+                    </div>
+                    <div class="text-center md:text-right">
+                        <span class="block text-xs uppercase tracking-widest text-on-surface-variant font-label-md mb-1">Aproveitamento</span>
+                        <span class="font-display-lg text-primary">${(session.final_probability * 100).toFixed(1)}%</span>
+                    </div>
                 </div>
-            </div>
-            
-            <div class="font-body-md">
-                ${historyHTML}
-            </div>
-        `;
+                
+                <div class="font-body-md">
+                    ${historyHTML}
+                </div>
+            `;
+        }
         
         reportModal.classList.remove('hidden');
     }
