@@ -11,7 +11,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const views = {
         selection: document.getElementById('view-selection'),
         diary: document.getElementById('view-diary'),
-        teacher: document.getElementById('view-teacher')
+        teacher: document.getElementById('view-teacher'),
+        bayesian: document.getElementById('view-bayesian')
     };
 
     const inputStudentName = document.getElementById('student-name');
@@ -42,8 +43,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     const btnExportReport = document.getElementById('btn-export-report');
     
     const stickyInputArea = document.getElementById('sticky-input-area');
-    const depthPercentage = document.getElementById('depth-percentage');
-    const depthBar = document.getElementById('depth-bar');
+
+    // Elementos da Análise Bayesiana
+    const btnStartBayesian = document.getElementById('btn-start-bayesian');
+    const bayesianInput = document.getElementById('bayesian-input');
+    const btnAnalyzeBayesian = document.getElementById('btn-analyze-bayesian');
+    const bayesianResultArea = document.getElementById('bayesian-result-area');
+    const bayesianDepthPercentage = document.getElementById('bayesian-depth-percentage');
+    const bayesianDepthBar = document.getElementById('bayesian-depth-bar');
+    const bayesianDiagnosis = document.getElementById('bayesian-diagnosis');
+    const btnSaveBayesian = document.getElementById('btn-save-bayesian');
 
     // Abrir/Fechar Help Modal
     btnHelp.addEventListener('click', () => helpModal.classList.remove('hidden'));
@@ -70,13 +79,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     let allSessions = [];
 
     // ----- INTEGRAÇÃO GROQ API (VIA NETLIFY FUNCTIONS) ----- //
-    async function getGroqResponse(studentName, bookTitle, history, currentInput, probLevel) {
-        const isAdvanced = probLevel >= 0.6;
-        const systemPrompt = `Você é um Tutor Literário especializado em incentivar o pensamento crítico de estudantes do Ensino Fundamental II.
+    async function getGroqResponse(studentName, bookTitle, history, currentInput) {
+        const systemPrompt = `Você é um Tutor Literário especializado em conversar com estudantes do Ensino Fundamental II.
 O aluno chama-se ${studentName} e está lendo o livro "${bookTitle}".
-Seu objetivo é fazer perguntas que estimulem a reflexão sobre a obra, personagens, enredo ou críticas sociais.
-${isAdvanced ? 'O aluno está demonstrando leitura profunda. Faça uma pergunta mais analítica e desafiadora.' : 'O aluno precisa de incentivo. Faça uma pergunta mais acessível focada em sentimentos ou na trama principal.'}
-Responda de forma amigável, curta (máximo de 2 a 3 frases) e sempre termine com UMA única pergunta reflexiva sobre o livro. Não dê as respostas prontas.`;
+Seu objetivo é conversar de forma amigável, incentivando o aluno a falar sobre a história, personagens e o que achou da obra.
+Responda de forma curta (máximo de 2 a 3 frases) e sempre termine com UMA única pergunta para continuar a conversa. Não dê as respostas prontas.`;
 
         try {
             const apiMessages = [
@@ -109,12 +116,9 @@ Responda de forma amigável, curta (máximo de 2 a 3 frases) e sempre termine co
         } catch (error) {
             console.error('Groq Error:', error);
             // Fallback questions
-            const fallbackQuestions = isAdvanced ? [
-                "Você percebe alguma crítica social escondida que o autor tentou transmitir na obra?",
-                "De que maneira as decisões dos personagens refletem problemas do nosso mundo real?"
-            ] : [
+            const fallbackQuestions = [
                 "Qual personagem dessa história mais chamou sua atenção até agora e por quê?",
-                "Teve alguma parte que você achou engraçada ou estranha? O que aconteceu?"
+                "Teve alguma parte que você achou muito interessante? O que aconteceu?"
             ];
             return "Interessante... " + fallbackQuestions[Math.floor(Math.random() * fallbackQuestions.length)];
         }
@@ -255,7 +259,9 @@ Responda de forma amigável, curta (máximo de 2 a 3 frases) e sempre termine co
     }
 
     function checkStartConditions() {
-        btnStart.disabled = !(inputStudentName.value.trim() && selectBook.value);
+        const canStart = inputStudentName.value.trim() && selectBook.value;
+        btnStart.disabled = !canStart;
+        if(btnStartBayesian) btnStartBayesian.disabled = !canStart;
     }
     inputStudentName.addEventListener('input', checkStartConditions);
     selectBook.addEventListener('change', checkStartConditions);
@@ -263,7 +269,6 @@ Responda de forma amigável, curta (máximo de 2 a 3 frases) e sempre termine co
     btnStart.addEventListener('click', () => {
         currentStudent = inputStudentName.value.trim();
         currentBook = selectBook.options[selectBook.selectedIndex].text;
-        priorProb = 0.5; 
         questionsAsked = 0;
         
         currentSession = {
@@ -272,11 +277,8 @@ Responda de forma amigável, curta (máximo de 2 a 3 frases) e sempre termine co
             date: new Date().toLocaleDateString('pt-BR'),
             history: [],
             final_probability: 0.5,
-            diagnosis: ""
+            diagnosis: "Papo com IA"
         };
-
-        if(depthBar) depthBar.style.width = '50%';
-        if(depthPercentage) depthPercentage.innerText = '50%';
 
         showView('diary');
         btnSend.disabled = false;
@@ -284,6 +286,79 @@ Responda de forma amigável, curta (máximo de 2 a 3 frases) e sempre termine co
         diaryInput.placeholder = "Escreva o que você sentiu, pensou ou imaginou...";
         initChat();
     });
+
+    // --- NOVA LÓGICA: INICIAR ANÁLISE BAYESIANA ---
+    let bayesianProbResult = 0.5;
+
+    if(btnStartBayesian) {
+        btnStartBayesian.addEventListener('click', () => {
+            currentStudent = inputStudentName.value.trim();
+            currentBook = selectBook.options[selectBook.selectedIndex].text;
+            priorProb = 0.5; // Reset
+            
+            showView('bayesian');
+            bayesianInput.value = '';
+            bayesianResultArea.classList.add('hidden');
+            bayesianResultArea.classList.remove('flex');
+            bayesianDepthBar.style.width = '0%';
+            bayesianDepthPercentage.innerText = '0%';
+        });
+    }
+
+    if(btnAnalyzeBayesian) {
+        btnAnalyzeBayesian.addEventListener('click', () => {
+            const text = bayesianInput.value.trim();
+            if(!text) return;
+            
+            bayesianProbResult = updateBayesianProbability(text);
+            const probPct = Math.round(bayesianProbResult * 100);
+            
+            bayesianResultArea.classList.remove('hidden');
+            bayesianResultArea.classList.add('flex');
+            
+            setTimeout(() => {
+                bayesianDepthBar.style.width = `${probPct}%`;
+                bayesianDepthPercentage.innerText = `${probPct}%`;
+            }, 100);
+            
+            const diag = getDiagnosis(bayesianProbResult);
+            bayesianDiagnosis.className = `text-center mt-2 p-3 rounded-lg font-label-md text-lg border ${diag.color}`;
+            bayesianDiagnosis.innerText = diag.text;
+        });
+    }
+
+    if(btnSaveBayesian) {
+        btnSaveBayesian.addEventListener('click', async () => {
+            const text = bayesianInput.value.trim();
+            btnSaveBayesian.innerHTML = "Salvando...";
+            btnSaveBayesian.disabled = true;
+            
+            const diagText = getDiagnosis(bayesianProbResult).text;
+            
+            const sessionData = {
+                student_name: currentStudent,
+                book: currentBook,
+                date: new Date().toLocaleDateString('pt-BR'),
+                history: [
+                    { question: "Reflexão Bayesiana:", answer: text, probabilityAfter: bayesianProbResult }
+                ],
+                final_probability: bayesianProbResult,
+                diagnosis: `Análise: ${diagText}`
+            };
+            
+            const { error } = await supabase.from('sessions').insert([sessionData]);
+            
+            if(!error) {
+                alert("Análise salva com sucesso no painel do professor!");
+                showView('selection');
+            } else {
+                alert("Erro ao salvar: " + error.message);
+            }
+            
+            btnSaveBayesian.innerHTML = `<span class="material-symbols-outlined">save</span> Salvar Resultado no Painel do Professor`;
+            btnSaveBayesian.disabled = false;
+        });
+    }
 
     btnTeacherPanel.addEventListener('click', async () => {
         const pw = prompt('Acesso restrito. Senha do Professor (digite "admin"):');
@@ -403,22 +478,10 @@ Responda de forma amigável, curta (máximo de 2 a 3 frases) e sempre termine co
         btnSend.disabled = true;
         diaryInput.disabled = true;
         
-        const newProb = updateBayesianProbability(text);
-        
-        // --- NEW: Animate Depth Bar --- //
-        const newProbPct = Math.round(newProb * 100);
-        if(depthBar) depthBar.style.width = `${newProbPct}%`;
-        if(depthPercentage) {
-            depthPercentage.innerText = `${newProbPct}%`;
-            depthPercentage.classList.add('scale-125');
-            setTimeout(() => depthPercentage.classList.remove('scale-125'), 300);
-        }
-        // ----------------------------- //
-        
         currentSession.history.push({
             question: currentQuestionText,
             answer: text,
-            probabilityAfter: newProb
+            probabilityAfter: 0.5 // Default já que não usa mais o bayesian aqui
         });
 
         questionsAsked++;
@@ -426,9 +489,6 @@ Responda de forma amigável, curta (máximo de 2 a 3 frases) e sempre termine co
         if (questionsAsked > 2) {
             // Finaliza a sessão e salva no Supabase
             addMessage('app', "*Salvando seus registros na nuvem... aguarde.*");
-            
-            currentSession.final_probability = newProb;
-            currentSession.diagnosis = getDiagnosis(newProb).text;
             
             const { error } = await supabase.from('sessions').insert([currentSession]);
             
@@ -443,7 +503,7 @@ Responda de forma amigável, curta (máximo de 2 a 3 frases) e sempre termine co
             const typingId = 'typing-' + Date.now();
             addTypingIndicator(typingId);
             
-            const aiResponse = await getGroqResponse(currentStudent, currentBook, currentSession.history, text, newProb);
+            const aiResponse = await getGroqResponse(currentStudent, currentBook, currentSession.history, text);
             
             removeTypingIndicator(typingId);
             
@@ -459,27 +519,28 @@ Responda de forma amigável, curta (máximo de 2 a 3 frases) e sempre termine co
     // ----- PAINEL DO PROFESSOR ----- //
     function updateMetrics(){
         const freeWritingSessions = allSessions.filter(s => s.diagnosis && s.diagnosis.startsWith('Humor:'));
-        const guidedSessions = allSessions.filter(s => !(s.diagnosis && s.diagnosis.startsWith('Humor:')));
+        const bayesianSessions = allSessions.filter(s => s.diagnosis && s.diagnosis.startsWith('Análise:'));
+        const guidedSessions = allSessions.filter(s => s.diagnosis === 'Papo com IA');
 
         // Active readings count: guided sessions
         const activeSpan = document.getElementById('active-readings-count');
-        if(activeSpan) activeSpan.textContent = guidedSessions.length;
+        if(activeSpan) activeSpan.textContent = guidedSessions.length + bayesianSessions.length;
 
         // Free writing count
         const freeSpan = document.getElementById('free-writing-count');
         if(freeSpan) freeSpan.textContent = freeWritingSessions.length;
 
-        // Average engagement: average final_probability * 100 (only guided)
+        // Average engagement: average final_probability * 100 (only bayesian analysis)
         let avg = 0;
-        if(guidedSessions.length > 0){
-            const sum = guidedSessions.reduce((acc,s)=>acc + (s.final_probability||0),0);
-            avg = (sum/guidedSessions.length)*100;
+        if(bayesianSessions.length > 0){
+            const sum = bayesianSessions.reduce((acc,s)=>acc + (s.final_probability||0),0);
+            avg = (sum/bayesianSessions.length)*100;
         }
         const avgSpan = document.getElementById('average-engagement');
         if(avgSpan) avgSpan.textContent = avg.toFixed(0)+'%';
 
-        // Attention alerts: count of guided sessions with low probability (<0.4)
-        const alerts = guidedSessions.filter(s=> (s.final_probability||0) < 0.4).length;
+        // Attention alerts: count of bayesian sessions with low probability (<0.4)
+        const alerts = bayesianSessions.filter(s=> (s.final_probability||0) < 0.4).length;
         const alertsSpan = document.getElementById('attention-alerts');
         if(alertsSpan) alertsSpan.textContent = alerts;
     }
@@ -496,7 +557,15 @@ Responda de forma amigável, curta (máximo de 2 a 3 frases) e sempre termine co
         
                 allSessions.forEach((session, index) => {
             const isFreeWriting = session.diagnosis && session.diagnosis.startsWith('Humor:');
-            const diag = isFreeWriting ? { color: 'bg-secondary-container text-on-secondary-container', text: 'Escrita Livre' } : getDiagnosis(session.final_probability);
+            const isBayesian = session.diagnosis && session.diagnosis.startsWith('Análise:');
+            let diag;
+            if (isFreeWriting) {
+                diag = { color: 'bg-secondary-container text-on-secondary-container', text: 'Escrita Livre' };
+            } else if (isBayesian) {
+                diag = getDiagnosis(session.final_probability);
+            } else {
+                diag = { color: 'bg-primary-container text-on-primary-container', text: 'Papo com IA' };
+            }
             const initials = session.student_name.substring(0,2).toUpperCase();
             
             const div = document.createElement('div');
