@@ -22,6 +22,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const btnTeacherPanel = document.getElementById('btn-teacher-panel');
     const btnBackTeacher = document.getElementById('btn-back-teacher');
     
+    const btnBackDiary = document.getElementById('btn-back-diary');
+    const btnBackBayesian = document.getElementById('btn-back-bayesian');
+    
     const chatContainer = document.getElementById('chat-container');
     const diaryInput = document.getElementById('diary-input');
     const btnSend = document.getElementById('btn-send');
@@ -375,6 +378,20 @@ REGRAS OBRIGATÓRIAS:
     });
 
     btnBackTeacher.addEventListener('click', () => showView(currentStudent ? 'diary' : 'selection'));
+    
+    if(btnBackDiary) {
+        btnBackDiary.addEventListener('click', () => {
+            if(confirm('Tem certeza que deseja sair? O seu progresso atual não será salvo.')) {
+                showView('selection');
+            }
+        });
+    }
+
+    if(btnBackBayesian) {
+        btnBackBayesian.addEventListener('click', () => {
+            showView('selection');
+        });
+    }
 
     diaryInput.addEventListener('input', function() {
         this.style.height = 'auto';
