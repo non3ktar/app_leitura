@@ -1,914 +1,408 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html class="light" lang="pt-br">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Diário Encantado de Leituras</title>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600&family=IM+Fell+English:ital@0;1&family=Spectral:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
-<style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  :root {
-    --ink: #1a0e2e;
-    --ink-light: #3b2860;
-    --parchment: #f5edd8;
-    --parchment-dark: #e8d9b8;
-    --parchment-deep: #d9c89a;
-    --gold: #b8922a;
-    --gold-bright: #d4a83a;
-    --gold-pale: #f0d98c;
-    --mystic: #5c3d8f;
-    --mystic-light: #8b6bbf;
-    --emerald: #1e5c3a;
-    --ruby: #7a1f35;
-    --star: #f5e6a0;
-  }
-
-  body {
-    background-color: #120a22;
-    background-image:
-      radial-gradient(ellipse at 20% 10%, rgba(92,61,143,0.25) 0%, transparent 50%),
-      radial-gradient(ellipse at 80% 90%, rgba(26,14,46,0.8) 0%, transparent 50%),
-      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
-    min-height: 100vh;
-    font-family: 'Spectral', Georgia, serif;
-    color: var(--ink);
-    overflow-x: hidden;
-  }
-
-  /* Stars background */
-  .stars {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    pointer-events: none;
-    z-index: 0;
-    overflow: hidden;
-  }
-  .star-dot {
-    position: absolute;
-    background: #fff;
-    border-radius: 50%;
-    animation: twinkle var(--d, 3s) ease-in-out infinite var(--delay, 0s);
-    opacity: 0;
-  }
-  @keyframes twinkle {
-    0%, 100% { opacity: 0; transform: scale(0.8); }
-    50% { opacity: var(--op, 0.7); transform: scale(1.2); }
-  }
-
-  /* Page wrapper */
-  .page {
-    position: relative;
-    z-index: 1;
-    max-width: 860px;
-    margin: 0 auto;
-    padding: 2rem 1.5rem 4rem;
-  }
-
-  /* ── Header / Title ── */
-  .header {
-    text-align: center;
-    padding: 3rem 1rem 2rem;
-    position: relative;
-  }
-  .header::before, .header::after {
-    content: '';
-    display: block;
-    height: 2px;
-    background: linear-gradient(to right, transparent, var(--gold), transparent);
-    margin: 1rem auto;
-    width: 70%;
-    opacity: 0.7;
-  }
-  .crown-icon {
-    font-size: 2.4rem;
-    line-height: 1;
-    margin-bottom: 0.5rem;
-    animation: float 4s ease-in-out infinite;
-    display: block;
-  }
-  @keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-6px); }
-  }
-  .title-main {
-    font-family: 'Cinzel Decorative', serif;
-    font-size: clamp(1.5rem, 4vw, 2.4rem);
-    color: var(--gold-bright);
-    letter-spacing: 0.04em;
-    text-shadow: 0 0 30px rgba(212,168,58,0.4), 0 2px 4px rgba(0,0,0,0.5);
-    line-height: 1.2;
-  }
-  .title-sub {
-    font-family: 'Cinzel', serif;
-    font-size: clamp(0.75rem, 2vw, 0.95rem);
-    color: var(--gold-pale);
-    letter-spacing: 0.25em;
-    text-transform: uppercase;
-    margin-top: 0.4rem;
-    opacity: 0.8;
-  }
-  .ornament {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.75rem;
-    margin: 0.5rem 0;
-    color: var(--gold);
-    font-size: 1.1rem;
-    opacity: 0.7;
-  }
-
-  /* ── Book card ── */
-  .parchment-card {
-    background: var(--parchment);
-    background-image:
-      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='paper'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0.3'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23paper)' opacity='0.07'/%3E%3C/svg%3E");
-    border-radius: 4px;
-    border: 1px solid var(--parchment-deep);
-    box-shadow:
-      0 0 0 6px rgba(184,146,42,0.12),
-      0 0 0 7px rgba(184,146,42,0.08),
-      0 8px 40px rgba(0,0,0,0.55),
-      inset 0 0 60px rgba(180,140,60,0.08);
-    padding: 2rem 2.5rem;
-    position: relative;
-    overflow: hidden;
-  }
-  .parchment-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 50%, rgba(0,0,0,0.04) 100%);
-    pointer-events: none;
-  }
-  /* Corner ornaments */
-  .parchment-card .corner {
-    position: absolute;
-    width: 40px; height: 40px;
-    border-color: var(--gold);
-    border-style: solid;
-    opacity: 0.4;
-  }
-  .corner.tl { top: 8px; left: 8px; border-width: 2px 0 0 2px; }
-  .corner.tr { top: 8px; right: 8px; border-width: 2px 2px 0 0; }
-  .corner.bl { bottom: 8px; left: 8px; border-width: 0 0 2px 2px; }
-  .corner.br { bottom: 8px; right: 8px; border-width: 0 2px 2px 0; }
-
-  /* ── Section label ── */
-  .section-label {
-    font-family: 'Cinzel', serif;
-    font-size: 0.72rem;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--mystic);
-    margin-bottom: 0.5rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-  .section-label::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: linear-gradient(to right, var(--mystic-light), transparent);
-    opacity: 0.4;
-  }
-
-  /* ── Book select ── */
-  .book-select-wrap {
-    position: relative;
-    margin-bottom: 1.8rem;
-  }
-  .book-select {
-    width: 100%;
-    padding: 0.8rem 2.5rem 0.8rem 1rem;
-    font-family: 'Spectral', serif;
-    font-size: 1.05rem;
-    font-style: italic;
-    color: var(--ink);
-    background: rgba(245,237,216,0.6);
-    border: 1px solid var(--parchment-deep);
-    border-radius: 3px;
-    appearance: none;
-    cursor: pointer;
-    transition: border-color 0.2s, box-shadow 0.2s;
-  }
-  .book-select:focus {
-    outline: none;
-    border-color: var(--gold);
-    box-shadow: 0 0 0 3px rgba(184,146,42,0.15);
-  }
-  .select-arrow {
-    position: absolute;
-    right: 0.8rem;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--gold);
-    pointer-events: none;
-    font-size: 1rem;
-  }
-
-  /* ── Student name input ── */
-  .name-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-    margin-bottom: 1.8rem;
-  }
-  @media (max-width: 520px) { .name-row { grid-template-columns: 1fr; } }
-
-  .fancy-input {
-    width: 100%;
-    padding: 0.7rem 0.9rem;
-    font-family: 'Spectral', serif;
-    font-size: 1rem;
-    color: var(--ink);
-    background: rgba(245,237,216,0.5);
-    border: none;
-    border-bottom: 2px solid var(--parchment-deep);
-    border-radius: 0;
-    transition: border-color 0.2s;
-  }
-  .fancy-input:focus {
-    outline: none;
-    border-bottom-color: var(--gold);
-    background: rgba(245,237,216,0.7);
-  }
-  .fancy-input::placeholder { color: #9a8a6a; font-style: italic; }
-
-  /* ── Mood selector ── */
-  .mood-section { margin-bottom: 1.8rem; }
-  .mood-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-top: 0.5rem;
-  }
-  .mood-btn {
-    background: transparent;
-    border: 1px solid var(--parchment-deep);
-    border-radius: 20px;
-    padding: 0.35rem 0.85rem;
-    font-family: 'Spectral', serif;
-    font-size: 0.9rem;
-    color: var(--ink-light);
-    cursor: pointer;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    gap: 0.3rem;
-  }
-  .mood-btn:hover { border-color: var(--gold); color: var(--ink); }
-  .mood-btn.active {
-    background: var(--ink);
-    border-color: var(--ink);
-    color: var(--parchment);
-    box-shadow: 0 2px 8px rgba(26,14,46,0.3);
-  }
-
-  /* ── Textarea (the scroll/parchment) ── */
-  .writing-wrap { position: relative; margin-bottom: 1.8rem; }
-  .scroll-lines {
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    pointer-events: none;
-    overflow: hidden;
-    border-radius: 3px;
-  }
-  .scroll-lines::after {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background-image: repeating-linear-gradient(
-      to bottom,
-      transparent,
-      transparent calc(1.75rem - 1px),
-      rgba(150,120,60,0.18) calc(1.75rem - 1px),
-      rgba(150,120,60,0.18) 1.75rem
-    );
-    background-position: 0 0.85rem;
-  }
-  .writing-area {
-    width: 100%;
-    min-height: 280px;
-    padding: 0.85rem 1rem;
-    font-family: 'IM Fell English', 'Spectral', Georgia, serif;
-    font-size: 1.05rem;
-    line-height: 1.75rem;
-    color: var(--ink);
-    background: rgba(245,237,216,0.4);
-    border: 1px solid var(--parchment-deep);
-    border-radius: 3px;
-    resize: vertical;
-    transition: border-color 0.2s, box-shadow 0.2s;
-  }
-  .writing-area:focus {
-    outline: none;
-    border-color: var(--gold);
-    box-shadow: 0 0 0 3px rgba(184,146,42,0.12);
-    background: rgba(245,237,216,0.55);
-  }
-  .writing-area::placeholder { color: #b09a72; font-style: italic; }
-
-  /* Word count */
-  .wc {
-    font-family: 'Cinzel', serif;
-    font-size: 0.7rem;
-    letter-spacing: 0.1em;
-    color: var(--mystic-light);
-    text-align: right;
-    margin-top: 0.3rem;
-    opacity: 0.75;
-  }
-
-  /* ── Rating stars ── */
-  .rating-section { margin-bottom: 2rem; }
-  .stars-row {
-    display: flex;
-    gap: 0.4rem;
-    margin-top: 0.5rem;
-  }
-  .star-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 1.6rem;
-    color: var(--parchment-deep);
-    transition: color 0.15s, transform 0.15s;
-    padding: 0;
-    line-height: 1;
-  }
-  .star-btn:hover, .star-btn.lit { color: var(--gold-bright); transform: scale(1.15); }
-  .star-label {
-    font-family: 'IM Fell English', serif;
-    font-style: italic;
-    font-size: 0.9rem;
-    color: var(--mystic-light);
-    margin-left: 0.5rem;
-    align-self: center;
-  }
-
-  /* ── Submit button ── */
-  .btn-submit {
-    display: block;
-    width: 100%;
-    padding: 0.9rem 2rem;
-    font-family: 'Cinzel', serif;
-    font-size: 1rem;
-    letter-spacing: 0.12em;
-    color: var(--parchment);
-    background: var(--ink);
-    border: 1px solid var(--gold);
-    border-radius: 3px;
-    cursor: pointer;
-    transition: all 0.25s;
-    position: relative;
-    overflow: hidden;
-  }
-  .btn-submit::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg, rgba(212,168,58,0.15) 0%, transparent 60%);
-    opacity: 0;
-    transition: opacity 0.3s;
-  }
-  .btn-submit:hover { background: var(--ink-light); box-shadow: 0 4px 20px rgba(184,146,42,0.3); }
-  .btn-submit:hover::before { opacity: 1; }
-  .btn-submit:active { transform: translateY(1px); }
-
-  /* ── Confirmation scroll ── */
-  .confirm-scroll {
-    display: none;
-    text-align: center;
-    padding: 3rem 2rem;
-    animation: fadeUp 0.6s ease both;
-  }
-  .confirm-scroll.show { display: block; }
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  .confirm-rune { font-size: 3rem; margin-bottom: 1rem; animation: float 3s ease-in-out infinite; display: block; }
-  .confirm-title {
-    font-family: 'Cinzel Decorative', serif;
-    font-size: 1.3rem;
-    color: var(--gold-bright);
-    margin-bottom: 0.75rem;
-  }
-  .confirm-text {
-    font-family: 'IM Fell English', serif;
-    font-style: italic;
-    font-size: 1rem;
-    color: var(--ink-light);
-    line-height: 1.6;
-    max-width: 400px;
-    margin: 0 auto 1.5rem;
-  }
-  .btn-new {
-    font-family: 'Cinzel', serif;
-    font-size: 0.85rem;
-    letter-spacing: 0.1em;
-    color: var(--mystic);
-    background: none;
-    border: 1px solid var(--mystic-light);
-    border-radius: 3px;
-    padding: 0.5rem 1.2rem;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  .btn-new:hover { background: var(--mystic); color: var(--parchment); }
-
-  /* ── Entries list ── */
-  .entries-section { margin-top: 3rem; }
-  .entries-title {
-    font-family: 'Cinzel', serif;
-    font-size: 0.8rem;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--gold-pale);
-    text-align: center;
-    margin-bottom: 1.5rem;
-    opacity: 0.7;
-  }
-  .entry-card {
-    background: var(--parchment);
-    border: 1px solid var(--parchment-deep);
-    border-radius: 3px;
-    padding: 1.25rem 1.5rem;
-    margin-bottom: 1rem;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-    position: relative;
-    animation: fadeUp 0.4s ease both;
-  }
-  .entry-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; width: 3px; height: 100%;
-    background: linear-gradient(to bottom, var(--gold), transparent);
-    border-radius: 3px 0 0 3px;
-  }
-  .entry-meta {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    flex-wrap: wrap;
-    gap: 0.3rem;
-    margin-bottom: 0.6rem;
-  }
-  .entry-author {
-    font-family: 'Cinzel', serif;
-    font-size: 0.8rem;
-    letter-spacing: 0.08em;
-    color: var(--mystic);
-  }
-  .entry-book {
-    font-family: 'IM Fell English', serif;
-    font-style: italic;
-    font-size: 0.85rem;
-    color: var(--gold);
-  }
-  .entry-mood {
-    font-size: 1rem;
-    margin-right: 0.2rem;
-  }
-  .entry-text {
-    font-family: 'IM Fell English', serif;
-    font-size: 0.97rem;
-    line-height: 1.65;
-    color: var(--ink);
-  }
-  .entry-stars { color: var(--gold-bright); font-size: 0.85rem; margin-top: 0.4rem; }
-  .entry-date {
-    font-family: 'Cinzel', serif;
-    font-size: 0.65rem;
-    color: #9a8a6a;
-    letter-spacing: 0.08em;
-    margin-top: 0.4rem;
-  }
-
-  /* ── Divider ── */
-  .divider {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    margin: 2.5rem 0;
-    opacity: 0.4;
-  }
-  .divider::before, .divider::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: var(--gold);
-  }
-  .divider span { color: var(--gold); font-size: 1rem; }
-
-  /* ── Teacher panel ── */
-  .teacher-toggle {
-    text-align: center;
-    margin-top: 2rem;
-  }
-  .btn-teacher {
-    font-family: 'Cinzel', serif;
-    font-size: 0.7rem;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: rgba(240,217,140,0.4);
-    background: none;
-    border: none;
-    cursor: pointer;
-    transition: color 0.2s;
-  }
-  .btn-teacher:hover { color: var(--gold-pale); }
-
-  .teacher-panel {
-    display: none;
-    margin-top: 1.5rem;
-    padding: 1.5rem;
-    background: rgba(18,10,34,0.85);
-    border: 1px solid rgba(184,146,42,0.25);
-    border-radius: 4px;
-  }
-  .teacher-panel.open { display: block; animation: fadeUp 0.3s ease both; }
-  .teacher-panel-title {
-    font-family: 'Cinzel', serif;
-    font-size: 0.8rem;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--gold);
-    margin-bottom: 1rem;
-    opacity: 0.8;
-  }
-  .teacher-stats {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 0.75rem;
-    margin-bottom: 1rem;
-  }
-  .stat-box {
-    background: rgba(245,237,216,0.05);
-    border: 1px solid rgba(184,146,42,0.15);
-    border-radius: 3px;
-    padding: 0.75rem 1rem;
-    text-align: center;
-  }
-  .stat-num {
-    font-family: 'Cinzel Decorative', serif;
-    font-size: 1.5rem;
-    color: var(--gold-bright);
-    display: block;
-  }
-  .stat-desc {
-    font-family: 'Spectral', serif;
-    font-size: 0.75rem;
-    color: rgba(245,237,216,0.5);
-    margin-top: 0.2rem;
-  }
-  .export-btn {
-    font-family: 'Cinzel', serif;
-    font-size: 0.7rem;
-    letter-spacing: 0.1em;
-    color: var(--gold-pale);
-    background: rgba(184,146,42,0.1);
-    border: 1px solid rgba(184,146,42,0.3);
-    border-radius: 3px;
-    padding: 0.5rem 1rem;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  .export-btn:hover { background: rgba(184,146,42,0.2); }
-
-  .no-entries {
-    text-align: center;
-    font-family: 'IM Fell English', serif;
-    font-style: italic;
-    color: rgba(240,217,140,0.35);
-    font-size: 0.95rem;
-    padding: 1rem 0;
-  }
-</style>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Escrita Livre</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:wght@400;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="style.css">
+    
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "on-tertiary-fixed": "#251a00", "outline": "#737973", "error": "#ba1a1a",
+                        "surface-container-highest": "#e4e2de", "secondary-fixed": "#d8e6d8",
+                        "surface-tint": "#4d6453", "surface-bright": "#fbf9f5",
+                        "primary-container": "#1b3022", "on-background": "#1b1c1a",
+                        "on-surface": "#1b1c1a", "surface-container": "#efeeea",
+                        "on-tertiary-fixed-variant": "#5a4400", "surface-container-low": "#f5f3ef",
+                        "background": "#fbf9f5", "primary-fixed": "#d0e9d4",
+                        "on-tertiary-container": "#af8e3a", "on-surface-variant": "#434843",
+                        "outline-variant": "#c3c8c1", "inverse-on-surface": "#f2f0ed",
+                        "on-primary": "#ffffff", "tertiary": "#1f1500", "on-tertiary": "#ffffff",
+                        "surface-dim": "#dbdad6", "inverse-primary": "#b4cdb8",
+                        "on-secondary-fixed": "#131e16", "surface-variant": "#e4e2de",
+                        "surface-container-lowest": "#ffffff", "surface-container-high": "#eae8e4",
+                        "secondary": "#556257", "error-container": "#ffdad6",
+                        "on-error": "#ffffff", "secondary-container": "#d5e3d5",
+                        "on-secondary-fixed-variant": "#3d4a40", "on-secondary-container": "#59665b",
+                        "secondary-fixed-dim": "#bccabd", "tertiary-container": "#382900",
+                        "primary": "#061b0e", "tertiary-fixed": "#ffdf96", "surface": "#fbf9f5",
+                        "inverse-surface": "#30312e", "tertiary-fixed-dim": "#e7c268",
+                        "on-primary-container": "#819986", "primary-fixed-dim": "#b4cdb8",
+                        "on-primary-fixed": "#0b2013", "on-error-container": "#93000a",
+                        "on-primary-fixed-variant": "#364c3c", "on-secondary": "#ffffff"
+                    },
+                    spacing: {
+                        "gutter": "24px", "sm": "12px", "xl": "80px", "xs": "4px",
+                        "base": "8px", "md": "24px", "lg": "48px", "container-max": "1140px"
+                    },
+                    fontFamily: {
+                        "headline-sm": ["Libre Caslon Text"], "body-lg": ["Inter"],
+                        "display-lg-mobile": ["Libre Caslon Text"], "caption": ["Inter"],
+                        "display-lg": ["Libre Caslon Text"], "headline-md": ["Libre Caslon Text"],
+                        "label-md": ["Inter"], "title-lg": ["Inter"], "body-md": ["Inter"]
+                    },
+                    fontSize: {
+                        "headline-sm": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "body-lg": ["18px", {"lineHeight": "30px", "fontWeight": "400"}],
+                        "display-lg-mobile": ["32px", {"lineHeight": "40px", "fontWeight": "700"}],
+                        "caption": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "headline-md": ["32px", {"lineHeight": "40px", "fontWeight": "600"}],
+                        "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                        "title-lg": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .star-btn {
+            font-variation-settings: 'FILL' 0;
+            color: #c3c8c1;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .star-btn.lit {
+            font-variation-settings: 'FILL' 1;
+            color: #ffdf96;
+        }
+        .mood-btn {
+            transition: all 0.2s;
+        }
+        .mood-btn.active {
+            background-color: #d5e3d5;
+            color: #131e16;
+            border-color: #b4cdb8;
+        }
+    </style>
 </head>
-<body>
+<body class="font-body-md text-on-surface bg-background flex flex-col min-h-[100dvh] paper-texture">
 
-<!-- Stars -->
-<div class="stars" id="stars-bg"></div>
-
-<div class="page">
-
-  <!-- Header -->
-  <header class="header">
-    <a href="index.html" style="position: absolute; left: 1.5rem; top: 1.5rem; color: var(--gold-pale); text-decoration: none; font-family: 'Cinzel', serif; font-size: 0.8rem; border: 1px solid var(--gold-pale); padding: 0.4rem 0.8rem; border-radius: 4px; background: rgba(18,10,34,0.6); z-index: 10;">← Voltar</a>
-    <span class="crown-icon">📖</span>
-    <h1 class="title-main">Diário Encantado de Leituras</h1>
-    <div class="ornament">✦ ✧ ✦</div>
-    <p class="title-sub">Escreva o que seu coração sentiu</p>
-  </header>
-
-  <!-- Writing form card -->
-  <div class="parchment-card" id="write-card">
-    <div class="corner tl"></div>
-    <div class="corner tr"></div>
-    <div class="corner bl"></div>
-    <div class="corner br"></div>
-
-    <!-- Name row -->
-    <div class="name-row">
-      <div>
-        <div class="section-label">Seu nome</div>
-        <input class="fancy-input" id="student-name" type="text" placeholder="Como você se chama?" maxlength="60">
-      </div>
-      <div>
-        <div class="section-label">Turma</div>
-        <input class="fancy-input" id="student-class" type="text" placeholder="Ex: 7º A" maxlength="20">
-      </div>
-    </div>
-
-    <!-- Book select -->
-    <div class="section-label">O livro que li</div>
-    <div class="book-select-wrap">
-      <select class="book-select" id="book-select">
-        <option value="">— Carregando acervo da turma... —</option>
-      </select>
-      <span class="select-arrow">▾</span>
-    </div>
-
-    <!-- Mood -->
-    <div class="mood-section">
-      <div class="section-label">Como você se sentiu ao ler?</div>
-      <div class="mood-grid">
-        <button class="mood-btn" data-mood="😍 Encantado(a)">😍 Encantado(a)</button>
-        <button class="mood-btn" data-mood="😢 Emocionado(a)">😢 Emocionado(a)</button>
-        <button class="mood-btn" data-mood="😠 Com raiva">😠 Com raiva</button>
-        <button class="mood-btn" data-mood="😰 Tenso(a)">😰 Tenso(a)</button>
-        <button class="mood-btn" data-mood="🤔 Pensativo(a)">🤔 Pensativo(a)</button>
-        <button class="mood-btn" data-mood="😴 Entediado(a)">😴 Entediado(a)</button>
-        <button class="mood-btn" data-mood="😮 Surpreso(a)">😮 Surpreso(a)</button>
-        <button class="mood-btn" data-mood="🥰 Identificado(a)">🥰 Identificado(a)</button>
-      </div>
-    </div>
-
-    <!-- Free writing area -->
-    <div class="section-label">Seu relato livre</div>
-    <div class="writing-wrap">
-      <div class="scroll-lines"></div>
-      <textarea
-        class="writing-area"
-        id="writing-area"
-        placeholder="Escreva aqui o que quiser sobre o livro... O que sentiu? Qual parte te marcou? Um personagem que te surpreendeu? Uma frase que ficou na sua mente? Este espaço é inteiramente seu — não há respostas certas ou erradas."
-      ></textarea>
-    </div>
-    <div class="wc" id="wc">0 palavras</div>
-
-    <!-- Star rating -->
-    <div class="rating-section">
-      <div class="section-label">Sua avaliação do livro</div>
-      <div style="display:flex; align-items:center; flex-wrap:wrap; gap:0.2rem;">
-        <div class="stars-row" id="stars-row">
-          <button class="star-btn" data-val="1">★</button>
-          <button class="star-btn" data-val="2">★</button>
-          <button class="star-btn" data-val="3">★</button>
-          <button class="star-btn" data-val="4">★</button>
-          <button class="star-btn" data-val="5">★</button>
+    <header class="bg-surface border-b border-outline-variant w-full top-0 sticky z-50">
+        <div class="flex justify-between items-center px-gutter py-sm max-w-container-max mx-auto h-16">
+            <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary">menu_book</span>
+                <h1 class="font-headline-sm text-headline-sm text-primary">Diário de Leitura</h1>
+            </div>
+            <div class="flex items-center gap-4">
+                <a href="index.html" class="text-on-surface-variant hover:bg-secondary-container hover:text-on-secondary-container transition-colors px-4 py-2 rounded-full flex items-center gap-2 font-label-md">
+                    <span class="material-symbols-outlined text-sm">arrow_back</span>
+                    Voltar
+                </a>
+            </div>
         </div>
-        <span class="star-label" id="star-label">Toque nas estrelas para avaliar</span>
-      </div>
-    </div>
+    </header>
 
-    <!-- Submit -->
-    <button class="btn-submit" id="btn-submit">✦ Guardar no Diário ✦</button>
-
-    <!-- Confirmation -->
-    <div class="confirm-scroll" id="confirm">
-      <span class="confirm-rune">✨</span>
-      <div class="confirm-title">Relato Guardado!</div>
-      <p class="confirm-text">Suas palavras foram seladas neste diário encantado. Que elas iluminem o caminho de quem as lê.</p>
-      <button class="btn-new" id="btn-new">✦ Escrever sobre outro livro</button>
-    </div>
-  </div>
-
-  <!-- Entries -->
-  <div class="entries-section">
-    <div class="divider"><span>✦</span></div>
-    <div class="entries-title">⟡ Relatos desta sessão ⟡</div>
-    <div id="entries-list"><div class="no-entries">Nenhum relato ainda — seja o primeiro a escrever.</div></div>
-  </div>
-
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-console.log("Iniciando script da Escrita Livre...");
-// Stars
-(function() {
-  const bg = document.getElementById('stars-bg');
-  for (let i = 0; i < 120; i++) {
-    const s = document.createElement('div');
-    s.className = 'star-dot';
-    const size = Math.random() < 0.15 ? 2.5 : (Math.random() < 0.4 ? 1.5 : 1);
-    s.style.cssText = `
-      width:${size}px; height:${size}px;
-      top:${Math.random()*100}%;
-      left:${Math.random()*100}%;
-      --d:${2+Math.random()*4}s;
-      --delay:-${Math.random()*5}s;
-      --op:${0.4+Math.random()*0.6};
-    `;
-    bg.appendChild(s);
-  }
-})();
-
-// State
-let rating = 0;
-let mood = '';
-const entries = [];
-
-// Mood buttons
-document.querySelectorAll('.mood-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    mood = btn.dataset.mood;
-  });
-});
-
-// Star rating
-const starBtns = document.querySelectorAll('.star-btn');
-const starLabel = document.getElementById('star-label');
-const labels = ['', 'Não gostei', 'Mais ou menos', 'Gostei', 'Muito bom!', 'Incrível! ★'];
-starBtns.forEach(btn => {
-  btn.addEventListener('click', () => {
-    rating = +btn.dataset.val;
-    starBtns.forEach(b => b.classList.toggle('lit', +b.dataset.val <= rating));
-    starLabel.textContent = labels[rating] || '';
-  });
-  btn.addEventListener('mouseenter', () => {
-    const v = +btn.dataset.val;
-    starBtns.forEach(b => b.style.color = +b.dataset.val <= v ? '#d4a83a' : '');
-  });
-  btn.addEventListener('mouseleave', () => {
-    starBtns.forEach(b => b.style.color = +b.dataset.val <= rating ? '#d4a83a' : '');
-  });
-});
-
-// --- SUPABASE CLIENT ---
-const SUPABASE_URL = 'https://zmiyiuhevujyxjcukdpe.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InptaXlpdWhldnVqeXhqY3VrZHBlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3Mjg0MjgsImV4cCI6MjA5NTMwNDQyOH0.fDzK49FEKXvCNs6X7RYv-qvj-eYJm7pVTbGZ5twvOR4';
-
-let supabaseClient;
-if (window.supabase) {
-  supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  console.log("Supabase client criado com sucesso!");
-} else {
-  console.error("ERRO CRÍTICO: window.supabase não foi carregado!");
-  alert("Erro de conexão com o banco de dados. Verifique a internet ou o cache do navegador.");
-}
-
-// Load books from Supabase
-async function loadBooks() {
-  const select = document.getElementById('book-select');
-  
-  if (!supabaseClient) {
-      select.innerHTML = '<option value="">Erro ao carregar banco de dados.</option>';
-      return;
-  }
-  
-  // Spinner animation for the option text
-  let dots = 0;
-  const spinnerInterval = setInterval(() => {
-    dots = (dots + 1) % 4;
-    select.innerHTML = `<option value="">— Carregando acervo da turma${'*'.repeat(dots)} —</option>`;
-  }, 400);
-
-  try {
-    console.log("Iniciando carregamento do acervo...");
-    const { data: books, error } = await supabaseClient.from('books').select('*').order('created_at', { ascending: true });
-    console.log("Acervo recebido:", books, error);
-    
-    clearInterval(spinnerInterval);
-    
-    select.innerHTML = '<option value="" disabled selected>— Escolha o livro —</option>';
-    
-    if (error) {
-      console.error(error);
-      select.innerHTML = '<option value="">Erro ao carregar livros. Tente F5.</option>';
-      return;
-    }
-
-    if (books && books.length > 0) {
-      books.forEach(book => {
-        const opt = document.createElement('option');
-        opt.value = book.title;
-        opt.textContent = book.title;
-        select.appendChild(opt);
-      });
-    } else {
-      select.innerHTML = '<option value="" disabled selected>Nenhum livro cadastrado pelo professor.</option>';
-    }
-  } catch(err) {
-    clearInterval(spinnerInterval);
-    select.innerHTML = '<option value="">Falha na conexão.</option>';
-  }
-}
-loadBooks();
-
-// Word count
-const area = document.getElementById('writing-area');
-const wc = document.getElementById('wc');
-area.addEventListener('input', () => {
-  const words = area.value.trim() ? area.value.trim().split(/\s+/).length : 0;
-  wc.textContent = `${words} palavra${words !== 1 ? 's' : ''}`;
-});
-
-// Submit
-document.getElementById('btn-submit').addEventListener('click', async () => {
-  const btn = document.getElementById('btn-submit');
-  const name = document.getElementById('student-name').value.trim();
-  const cls  = document.getElementById('student-class').value.trim();
-  const book = document.getElementById('book-select').value;
-  const text = area.value.trim();
-  
-  if (!name) { alert('Por favor, escreva seu nome antes de guardar.'); return; }
-  if (!book) { alert('Escolha o livro que você leu.'); return; }
-  if (text.length < 10) { alert('Escreva um pouco mais antes de guardar. Este diário é seu!'); return; }
-
-  btn.disabled = true;
-  btn.textContent = "Guardando...";
-
-  const finalDiagnosis = `Humor: ${mood || '✨'} | ${rating > 0 ? rating + ' Estrelas' : 'Sem nota'} | ${text.split(/\s+/).length} palavras.`;
-
-  const currentSession = {
-    student_name: `${name} ${cls ? '('+cls+')' : ''}`.trim(),
-    book: book,
-    date: new Date().toLocaleDateString('pt-BR'),
-    history: [{
-      question: "📝 Relato de Escrita Livre Encantada",
-      answer: text,
-      probabilityAfter: 0
-    }],
-    final_probability: 0.5,
-    diagnosis: finalDiagnosis
-  };
-
-  try {
-    const { error } = await supabaseClient.from('sessions').insert([currentSession]);
-    
-    btn.disabled = false;
-    btn.textContent = "✦ Guardar no Diário ✦";
-
-    if(error) {
-        alert("Erro de Banco de Dados:\n" + (error.message || JSON.stringify(error)));
-        console.error("Erro DB:", error);
-        return;
-    }
-  } catch(e) {
-    alert("Erro no código:\n" + e.message);
-    console.error("Erro JS:", e);
-    btn.disabled = false;
-    btn.textContent = "✦ Guardar no Diário ✦";
-    return;
-  }
-
-  // Show confirmation
-  document.getElementById('write-card').style.display = 'none';
-  const c = document.getElementById('confirm');
-  c.classList.add('show');
-  
-  // Add to local list visually
-  const list = document.getElementById('entries-list');
-  if(list.querySelector('.no-entries')) list.innerHTML = '';
-  list.innerHTML = `
-    <div class="entry-card">
-      <div class="entry-meta">
-        <div>
-          <span class="entry-author">${currentSession.student_name}</span>
-          <br><span class="entry-book">Livro: ${currentSession.book}</span>
+    <main class="flex-grow flex flex-col max-w-container-max mx-auto w-full px-gutter pt-md pb-[120px] relative z-10">
+        
+        <div class="text-center mb-10 fade-in">
+            <h2 class="font-display-lg text-display-lg-mobile md:text-display-lg text-secondary mb-4 flex items-center justify-center gap-3">
+                <span class="material-symbols-outlined text-4xl">edit_document</span>
+                Escrita Livre
+            </h2>
+            <p class="font-body-lg text-body-lg text-on-surface-variant">Escreva o que seu coração sentiu. Sem avaliações, apenas emoção.</p>
         </div>
-        <div>
-          <span class="entry-mood">${mood || '✨'}</span>
-          <br><div class="entry-stars">${'★'.repeat(rating)}${'☆'.repeat(5-rating)}</div>
-        </div>
-      </div>
-      <div class="entry-text">${text}</div>
-      <div class="entry-date">${currentSession.date}</div>
-    </div>
-  ` + list.innerHTML;
-});
 
-document.getElementById('btn-new').addEventListener('click', () => {
-  document.getElementById('confirm').classList.remove('show');
-  document.getElementById('write-card').style.display = 'block';
-  document.getElementById('writing-area').value = '';
-  document.getElementById('student-name').value = '';
-  document.getElementById('student-class').value = '';
-  document.getElementById('book-select').value = '';
-  rating = 0; mood = '';
-  document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('.star-btn').forEach(b => { b.classList.remove('lit'); b.style.color = ''; });
-  document.getElementById('star-label').textContent = 'Toque nas estrelas para avaliar';
-  document.getElementById('wc').textContent = '0 palavras';
-});
-</script>
+        <section id="write-card" class="w-full max-w-3xl mx-auto bg-surface-container-low p-6 md:p-8 rounded-[24px] border border-outline-variant shadow-sm fade-in">
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div>
+                    <label class="block font-label-md text-on-surface mb-2">Seu nome</label>
+                    <input id="student-name" type="text" placeholder="Como você se chama?" class="w-full bg-surface border border-outline-variant rounded-xl p-4 font-body-lg focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary transition-all">
+                </div>
+                <div>
+                    <label class="block font-label-md text-on-surface mb-2">Turma</label>
+                    <input id="student-class" type="text" placeholder="Ex: 7º A" class="w-full bg-surface border border-outline-variant rounded-xl p-4 font-body-lg focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary transition-all">
+                </div>
+            </div>
+
+            <div class="mb-6">
+                <label class="block font-label-md text-on-surface mb-2">O livro que li</label>
+                <div class="relative">
+                    <select id="book-select" class="w-full bg-surface border border-outline-variant rounded-xl p-4 font-body-lg appearance-none focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary transition-all cursor-pointer">
+                        <option value="">— Carregando acervo da turma... —</option>
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-4 flex items-center text-on-surface-variant">
+                        <span class="material-symbols-outlined">expand_more</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-6">
+                <label class="block font-label-md text-on-surface mb-2">Como você se sentiu ao ler?</label>
+                <div class="flex flex-wrap gap-2">
+                    <button class="mood-btn border border-outline-variant rounded-full px-4 py-2 font-label-md text-on-surface-variant hover:bg-surface-variant" data-mood="😍 Encantado(a)">😍 Encantado(a)</button>
+                    <button class="mood-btn border border-outline-variant rounded-full px-4 py-2 font-label-md text-on-surface-variant hover:bg-surface-variant" data-mood="😢 Emocionado(a)">😢 Emocionado(a)</button>
+                    <button class="mood-btn border border-outline-variant rounded-full px-4 py-2 font-label-md text-on-surface-variant hover:bg-surface-variant" data-mood="😠 Com raiva">😠 Com raiva</button>
+                    <button class="mood-btn border border-outline-variant rounded-full px-4 py-2 font-label-md text-on-surface-variant hover:bg-surface-variant" data-mood="😰 Tenso(a)">😰 Tenso(a)</button>
+                    <button class="mood-btn border border-outline-variant rounded-full px-4 py-2 font-label-md text-on-surface-variant hover:bg-surface-variant" data-mood="🤔 Pensativo(a)">🤔 Pensativo(a)</button>
+                    <button class="mood-btn border border-outline-variant rounded-full px-4 py-2 font-label-md text-on-surface-variant hover:bg-surface-variant" data-mood="😴 Entediado(a)">😴 Entediado(a)</button>
+                    <button class="mood-btn border border-outline-variant rounded-full px-4 py-2 font-label-md text-on-surface-variant hover:bg-surface-variant" data-mood="😮 Surpreso(a)">😮 Surpreso(a)</button>
+                    <button class="mood-btn border border-outline-variant rounded-full px-4 py-2 font-label-md text-on-surface-variant hover:bg-surface-variant" data-mood="🥰 Identificado(a)">🥰 Identificado(a)</button>
+                </div>
+            </div>
+
+            <div class="mb-6">
+                <label class="block font-label-md text-on-surface mb-2">Seu relato livre</label>
+                <textarea id="writing-area" class="w-full min-h-[240px] bg-surface border border-outline-variant rounded-xl p-4 font-body-lg focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary resize-none" placeholder="Escreva aqui o que quiser sobre o livro... O que sentiu? Qual parte te marcou? Um personagem que te surpreendeu? Uma frase que ficou na sua mente?"></textarea>
+                <div class="text-right mt-1 font-caption text-on-surface-variant" id="wc">0 palavras</div>
+            </div>
+
+            <div class="mb-8 bg-surface-container p-4 rounded-xl border border-outline-variant">
+                <label class="block font-label-md text-on-surface mb-2">Sua avaliação do livro</label>
+                <div class="flex items-center gap-4">
+                    <div class="flex gap-1" id="stars-row">
+                        <span class="material-symbols-outlined text-3xl star-btn" data-val="1">star</span>
+                        <span class="material-symbols-outlined text-3xl star-btn" data-val="2">star</span>
+                        <span class="material-symbols-outlined text-3xl star-btn" data-val="3">star</span>
+                        <span class="material-symbols-outlined text-3xl star-btn" data-val="4">star</span>
+                        <span class="material-symbols-outlined text-3xl star-btn" data-val="5">star</span>
+                    </div>
+                    <span class="font-body-md text-on-surface-variant italic" id="star-label">Toque nas estrelas</span>
+                </div>
+            </div>
+
+            <button id="btn-submit" class="w-full bg-secondary text-on-secondary px-6 py-4 rounded-full font-label-md text-base hover:bg-secondary-container hover:text-on-secondary-container transition-all flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined">save</span>
+                Guardar no Diário
+            </button>
+        </section>
+
+        <!-- Confirmation -->
+        <section id="confirm" class="hidden flex-col items-center justify-center py-20 fade-in text-center max-w-xl mx-auto">
+            <span class="material-symbols-outlined text-6xl text-secondary mb-4">check_circle</span>
+            <h3 class="font-headline-md text-primary mb-2">Relato Guardado!</h3>
+            <p class="font-body-lg text-on-surface-variant mb-8">Suas palavras foram salvas neste diário. Que elas iluminem o caminho de quem as lê.</p>
+            <button id="btn-new" class="bg-surface border border-outline-variant text-on-surface px-6 py-3 rounded-full font-label-md hover:bg-surface-variant transition-all">
+                Escrever sobre outro livro
+            </button>
+        </section>
+
+        <!-- Entries -->
+        <div class="w-full max-w-3xl mx-auto mt-12">
+            <h3 class="font-title-lg text-on-surface mb-4 flex items-center gap-2 border-b border-outline-variant pb-2">
+                <span class="material-symbols-outlined text-secondary">history_edu</span>
+                Relatos desta sessão
+            </h3>
+            <div id="entries-list" class="space-y-4">
+                <div class="no-entries text-center font-body-md text-on-surface-variant py-4 italic">Nenhum relato ainda nesta sessão.</div>
+            </div>
+        </div>
+
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        let rating = 0;
+        let mood = '';
+
+        // Mood buttons
+        document.querySelectorAll('.mood-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                mood = btn.dataset.mood;
+            });
+        });
+
+        // Star rating
+        const starBtns = document.querySelectorAll('.star-btn');
+        const starLabel = document.getElementById('star-label');
+        const labels = ['', 'Não gostei', 'Mais ou menos', 'Gostei', 'Muito bom!', 'Incrível!'];
+        
+        starBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                rating = +btn.dataset.val;
+                starBtns.forEach(b => b.classList.toggle('lit', +b.dataset.val <= rating));
+                starLabel.textContent = labels[rating] || '';
+            });
+            btn.addEventListener('mouseenter', () => {
+                const v = +btn.dataset.val;
+                starBtns.forEach(b => {
+                    if (+b.dataset.val <= v) {
+                        b.style.fontVariationSettings = "'FILL' 1";
+                        b.style.color = '#ffdf96';
+                    } else {
+                        if (+b.dataset.val > rating) {
+                            b.style.fontVariationSettings = "'FILL' 0";
+                            b.style.color = '#c3c8c1';
+                        }
+                    }
+                });
+            });
+            btn.addEventListener('mouseleave', () => {
+                starBtns.forEach(b => {
+                    if (+b.dataset.val <= rating) {
+                        b.style.fontVariationSettings = "'FILL' 1";
+                        b.style.color = '#ffdf96';
+                    } else {
+                        b.style.fontVariationSettings = "'FILL' 0";
+                        b.style.color = '#c3c8c1';
+                    }
+                });
+            });
+        });
+
+        // --- SUPABASE CLIENT ---
+        const SUPABASE_URL = 'https://zmiyiuhevujyxjcukdpe.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InptaXlpdWhldnVqeXhqY3VrZHBlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3Mjg0MjgsImV4cCI6MjA5NTMwNDQyOH0.fDzK49FEKXvCNs6X7RYv-qvj-eYJm7pVTbGZ5twvOR4';
+
+        let supabaseClient;
+        if (window.supabase) {
+            supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        } else {
+            alert("Erro de conexão com o banco de dados. Verifique a internet ou o cache do navegador.");
+        }
+
+        // Load books
+        async function loadBooks() {
+            const select = document.getElementById('book-select');
+            if (!supabaseClient) {
+                select.innerHTML = '<option value="">Erro ao carregar banco de dados.</option>';
+                return;
+            }
+            
+            try {
+                const { data: books, error } = await supabaseClient.from('books').select('*').order('created_at', { ascending: true });
+                
+                select.innerHTML = '<option value="" disabled selected>— Escolha o livro —</option>';
+                
+                if (error) {
+                    select.innerHTML = '<option value="">Erro ao carregar livros.</option>';
+                    return;
+                }
+
+                if (books && books.length > 0) {
+                    books.forEach(book => {
+                        const opt = document.createElement('option');
+                        opt.value = book.title;
+                        opt.textContent = book.title;
+                        select.appendChild(opt);
+                    });
+                } else {
+                    select.innerHTML = '<option value="" disabled selected>Nenhum livro cadastrado.</option>';
+                }
+            } catch(err) {
+                select.innerHTML = '<option value="">Falha na conexão.</option>';
+            }
+        }
+        loadBooks();
+
+        // Word count
+        const area = document.getElementById('writing-area');
+        const wc = document.getElementById('wc');
+        area.addEventListener('input', () => {
+            const words = area.value.trim() ? area.value.trim().split(/\s+/).length : 0;
+            wc.textContent = `${words} palavra${words !== 1 ? 's' : ''}`;
+        });
+
+        // Submit
+        document.getElementById('btn-submit').addEventListener('click', async () => {
+            const btn = document.getElementById('btn-submit');
+            const name = document.getElementById('student-name').value.trim();
+            const cls  = document.getElementById('student-class').value.trim();
+            const book = document.getElementById('book-select').value;
+            const text = area.value.trim();
+            
+            if (!name) { alert('Por favor, escreva seu nome antes de guardar.'); return; }
+            if (!book) { alert('Escolha o livro que você leu.'); return; }
+            if (text.length < 10) { alert('Escreva um pouco mais antes de guardar. Este diário é seu!'); return; }
+
+            btn.disabled = true;
+            btn.innerHTML = "Guardando...";
+
+            const finalDiagnosis = `Humor: ${mood || '✨'} | ${rating > 0 ? rating + ' Estrelas' : 'Sem nota'} | ${text.split(/\s+/).length} palavras.`;
+
+            const currentSession = {
+                student_name: `${name} ${cls ? '('+cls+')' : ''}`.trim(),
+                book: book,
+                date: new Date().toLocaleDateString('pt-BR'),
+                history: [{
+                    question: "📝 Relato de Escrita Livre",
+                    answer: text,
+                    probabilityAfter: 0
+                }],
+                final_probability: 0.5,
+                diagnosis: finalDiagnosis
+            };
+
+            try {
+                const { error } = await supabaseClient.from('sessions').insert([currentSession]);
+                
+                if(error) {
+                    alert("Erro de Banco de Dados:\n" + error.message);
+                    btn.disabled = false;
+                    btn.innerHTML = '<span class="material-symbols-outlined">save</span> Guardar no Diário';
+                    return;
+                }
+            } catch(e) {
+                alert("Erro no código:\n" + e.message);
+                btn.disabled = false;
+                btn.innerHTML = '<span class="material-symbols-outlined">save</span> Guardar no Diário';
+                return;
+            }
+
+            document.getElementById('write-card').classList.add('hidden');
+            const confirmSection = document.getElementById('confirm');
+            confirmSection.classList.remove('hidden');
+            confirmSection.classList.add('flex');
+            
+            const list = document.getElementById('entries-list');
+            if(list.querySelector('.no-entries')) list.innerHTML = '';
+            
+            const entryHTML = `
+                <div class="bg-surface p-6 rounded-xl border border-outline-variant shadow-sm fade-in mb-4">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <span class="font-title-lg text-primary block">${currentSession.student_name}</span>
+                            <span class="font-body-md text-on-surface-variant italic">Livro: ${currentSession.book}</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="inline-block bg-secondary-container text-on-secondary-container px-3 py-1 rounded-full text-xs font-label-md mb-1">${mood || 'Livre'}</span>
+                            <div class="flex text-tertiary-fixed justify-end">
+                                ${'<span class="material-symbols-outlined" style="font-variation-settings: \'FILL\' 1">star</span>'.repeat(rating)}
+                                ${'<span class="material-symbols-outlined" style="font-variation-settings: \'FILL\' 0">star</span>'.repeat(5-rating)}
+                            </div>
+                        </div>
+                    </div>
+                    <p class="font-body-md text-on-surface whitespace-pre-wrap">${text}</p>
+                    <div class="mt-4 font-caption text-outline text-right">${currentSession.date}</div>
+                </div>
+            `;
+            list.innerHTML = entryHTML + list.innerHTML;
+        });
+
+        document.getElementById('btn-new').addEventListener('click', () => {
+            document.getElementById('confirm').classList.add('hidden');
+            document.getElementById('confirm').classList.remove('flex');
+            document.getElementById('write-card').classList.remove('hidden');
+            
+            document.getElementById('writing-area').value = '';
+            document.getElementById('student-name').value = '';
+            document.getElementById('student-class').value = '';
+            document.getElementById('book-select').value = '';
+            rating = 0; mood = '';
+            
+            document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.star-btn').forEach(b => {
+                b.classList.remove('lit');
+                b.style.fontVariationSettings = "'FILL' 0";
+                b.style.color = '#c3c8c1';
+            });
+            document.getElementById('star-label').textContent = 'Toque nas estrelas';
+            document.getElementById('wc').textContent = '0 palavras';
+        });
+    </script>
 </body>
 </html>
