@@ -297,7 +297,7 @@
         }
 
         function getAvatarUrl(seed) {
-            return \`https://api.dicebear.com/8.x/\${avatarStyle}/svg?seed=\${seed}&backgroundColor=f4ecd8\`;
+            return `https://api.dicebear.com/8.x/${avatarStyle}/svg?seed=${seed}&backgroundColor=f4ecd8`;
         }
 
         function renderAvatarOptions() {
@@ -306,7 +306,7 @@
                 const div = document.createElement('div');
                 div.className = 'cursor-pointer p-1 rounded-lg border-2 border-transparent hover:border-gold transition-all';
                 div.dataset.seed = seed;
-                div.innerHTML = \`<img src="\${getAvatarUrl(seed)}" alt="\${seed}" class="w-full h-auto rounded bg-paper shadow-sm">\`;
+                div.innerHTML = `<img src="${getAvatarUrl(seed)}" alt="${seed}" class="w-full h-auto rounded bg-paper shadow-sm">`;
                 div.addEventListener('click', () => selectAvatar(seed));
                 avatarSelection.appendChild(div);
             });
@@ -409,7 +409,7 @@
             }
 
             btnPost.disabled = false;
-            btnPost.innerHTML = \`<span class="material-symbols-outlined text-sm">send</span> Publicar\`;
+            btnPost.innerHTML = `<span class="material-symbols-outlined text-sm">send</span> Publicar`;
         }
 
         async function fetchFeed() {
@@ -422,22 +422,22 @@
 
                 if (error) {
                     console.error("Erro ao buscar feed:", error);
-                    feedStream.innerHTML = \`
+                    feedStream.innerHTML = `
                         <div class="text-center text-error py-10 font-body border border-error bg-error-container/20 rounded p-4">
                             <p>O arquivo da biblioteca não pôde ser acessado.</p>
-                            <p class="text-sm mt-2">\${error.message}</p>
-                        </div>\`;
+                            <p class="text-sm mt-2">${error.message}</p>
+                        </div>`;
                     return;
                 }
 
                 feedStream.innerHTML = '';
 
                 if (data.length === 0) {
-                    feedStream.innerHTML = \`
+                    feedStream.innerHTML = `
                         <div class="text-center text-ink-light py-10 font-serif italic">
                             <span class="material-symbols-outlined text-4xl mb-2 opacity-50">import_contacts</span>
                             <p>Ainda não há relatos nesta biblioteca. Seja o primeiro a escrever!</p>
-                        </div>\`;
+                        </div>`;
                     return;
                 }
 
@@ -452,29 +452,29 @@
                         .replace(/'/g, "&#039;")
                         .replace(/\\n/g, "<br>");
 
-                    const postHtml = \`
+                    const postHtml = `
                         <div class="bg-paper-light vintage-border shadow-sm p-5 animate-[fadeIn_0.5s_ease-out]">
                             <div class="flex gap-4 mb-3">
-                                <img src="\${getAvatarUrl(post.avatar_seed)}" alt="Avatar" class="w-14 h-14 rounded border border-border-paper bg-paper shrink-0">
+                                <img src="${getAvatarUrl(post.avatar_seed)}" alt="Avatar" class="w-14 h-14 rounded border border-border-paper bg-paper shrink-0">
                                 <div class="flex-1">
                                     <div class="flex justify-between items-start">
                                         <div>
-                                            <h3 class="font-serif font-bold text-ink text-lg leading-tight">\${post.student_name}</h3>
-                                            <p class="font-body text-ink-light text-sm italic">\${post.grade} - Turma \${post.class_name}</p>
+                                            <h3 class="font-serif font-bold text-ink text-lg leading-tight">${post.student_name}</h3>
+                                            <p class="font-body text-ink-light text-sm italic">${post.grade} - Turma ${post.class_name}</p>
                                         </div>
-                                        <span class="font-body text-xs text-ink-light opacity-70">\${date}</span>
+                                        <span class="font-body text-xs text-ink-light opacity-70">${date}</span>
                                     </div>
                                     <div class="mt-2 inline-flex items-center gap-1 bg-gold/20 text-ink-light text-xs font-bold px-2 py-1 rounded border border-gold/40">
                                         <span class="material-symbols-outlined text-[14px]">menu_book</span>
-                                        Lendo: \${post.book_title}
+                                        Lendo: ${post.book_title}
                                     </div>
                                 </div>
                             </div>
                             <div class="font-body text-ink text-lg leading-relaxed mt-2 pl-2 border-l-2 border-leather/30">
-                                \${safeContent}
+                                ${safeContent}
                             </div>
                         </div>
-                    \`;
+                    `;
                     feedStream.insertAdjacentHTML('beforeend', postHtml);
                 });
             } catch(e) {
