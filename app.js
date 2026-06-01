@@ -10,24 +10,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     // DOM Elements
     const views = {
         selection: document.getElementById('view-selection'),
-        diary: document.getElementById('view-diary'),
         teacher: document.getElementById('view-teacher'),
         bayesian: document.getElementById('view-bayesian')
     };
 
     const inputStudentName = document.getElementById('student-name');
     const selectBook = document.getElementById('book-select');
-    const btnStart = document.getElementById('btn-start-diary');
-    
     const btnTeacherPanel = document.getElementById('btn-teacher-panel');
     const btnBackTeacher = document.getElementById('btn-back-teacher');
     
-    const btnBackDiary = document.getElementById('btn-back-diary');
     const btnBackBayesian = document.getElementById('btn-back-bayesian');
-    
-    const chatContainer = document.getElementById('chat-container');
-    const diaryInput = document.getElementById('diary-input');
-    const btnSend = document.getElementById('btn-send');
 
     // Teacher Panel DOM
     const inputNewBook = document.getElementById('new-book-input');
@@ -44,8 +36,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const reportContent = document.getElementById('report-content');
     const btnCloseReport = document.getElementById('btn-close-report');
     const btnExportReport = document.getElementById('btn-export-report');
-    
-    const stickyInputArea = document.getElementById('sticky-input-area');
 
     // Elementos da Análise Bayesiana
     const btnStartBayesian = document.getElementById('btn-start-bayesian');
@@ -66,8 +56,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     let currentBook = null;
     let currentStudent = null;
     let priorProb = 0.5; // Probabilidade inicial
-    let questionsAsked = 0; 
-    let currentQuestionText = "";
     
     let currentSession = {
         student_name: "",
@@ -81,54 +69,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     let books = [];
     let allSessions = [];
 
-    // ----- INTEGRAÇÃO GROQ API (VIA NETLIFY FUNCTIONS) ----- //
-    async function getGroqResponse(studentName, bookTitle, history, currentInput) {
-        const systemPrompt = `Você é um Tutor Literário pedagógico conversando com o aluno ${studentName} do Ensino Fundamental II sobre o livro "${bookTitle}".
-REGRAS OBRIGATÓRIAS:
-1. JAMAIS conte a história, dê resumos, spoilers ou revele características dos personagens. Se o aluno pedir resumos ou perguntar o que acontece, recuse educadamente e diga que a magia da leitura está em descobrir por si mesmo.
-2. O seu papel NUNCA é substituir a leitura, mas sim instigar a reflexão crítica do aluno.
-3. Se o aluno tentar "trapacear" para obter respostas, faça perguntas sobre como ele se sentiria no lugar do protagonista, forçando a criatividade.
-4. SEGURANÇA E FOCO: Você está expressamente PROIBIDO de discutir QUALQUER assunto que não seja literatura e o livro "${bookTitle}". Se o aluno tentar desviar o assunto para jogos, internet, piadas, vida pessoal, atualidades ou qualquer outro tema, você DEVE recusar educadamente e redirecionar a conversa imediatamente de volta para a leitura do livro.
-5. Responda sempre de forma curta e amigável (máximo de 2 a 3 frases) e termine com UMA única pergunta reflexiva.`;
-
-        try {
-            const apiMessages = [
-                { role: "system", content: systemPrompt }
-            ];
-            
-            history.forEach(h => {
-                apiMessages.push({ role: "assistant", content: h.question });
-                apiMessages.push({ role: "user", content: h.answer });
-            });
-
-            // Chama a função serverless do Netlify para ocultar a chave da API
-            const response = await fetch('/.netlify/functions/groq', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    model: 'llama-3.1-8b-instant',
-                    messages: apiMessages,
-                    temperature: 0.7,
-                    max_tokens: 250
-                })
-            });
-
-            if (!response.ok) throw new Error('Groq API Error via Netlify Function');
-            
-            const data = await response.json();
-            return data.choices[0].message.content;
-        } catch (error) {
-            console.error('Groq Error:', error);
-            // Fallback questions
-            const fallbackQuestions = [
-                "Qual personagem dessa história mais chamou sua atenção até agora e por quê?",
-                "Teve alguma parte que você achou muito interessante? O que aconteceu?"
-            ];
-            return "Interessante... " + fallbackQuestions[Math.floor(Math.random() * fallbackQuestions.length)];
-        }
-    }
 
     // ----- INTEGRAÇÃO SUPABASE ----- //
     
@@ -257,41 +197,14 @@ REGRAS OBRIGATÓRIAS:
             views[viewName].classList.remove('hidden');
             views[viewName].classList.add('fade-in', 'flex');
         }
-        
-        if (stickyInputArea) {
-            if (viewName === 'diary') stickyInputArea.classList.remove('hidden');
-            else stickyInputArea.classList.add('hidden');
-        }
     }
 
     function checkStartConditions() {
         const canStart = inputStudentName.value.trim() && selectBook.value;
-        btnStart.disabled = !canStart;
         if(btnStartBayesian) btnStartBayesian.disabled = !canStart;
     }
     inputStudentName.addEventListener('input', checkStartConditions);
     selectBook.addEventListener('change', checkStartConditions);
-
-    btnStart.addEventListener('click', () => {
-        currentStudent = inputStudentName.value.trim();
-        currentBook = selectBook.options[selectBook.selectedIndex].text;
-        questionsAsked = 0;
-        
-        currentSession = {
-            student_name: currentStudent,
-            book: currentBook,
-            date: new Date().toLocaleDateString('pt-BR'),
-            history: [],
-            final_probability: 0.5,
-            diagnosis: "Papo com IA"
-        };
-
-        showView('diary');
-        btnSend.disabled = false;
-        diaryInput.disabled = false;
-        diaryInput.placeholder = "Escreva o que você sentiu, pensou ou imaginou...";
-        initChat();
-    });
 
     // --- NOVA LÓGICA: INICIAR ANÁLISE BAYESIANA ---
     let bayesianProbResult = 0.5;
@@ -377,164 +290,14 @@ REGRAS OBRIGATÓRIAS:
         }
     });
 
-    btnBackTeacher.addEventListener('click', () => showView(currentStudent ? 'diary' : 'selection'));
+    btnBackTeacher.addEventListener('click', () => showView('selection'));
     
-    if(btnBackDiary) {
-        btnBackDiary.addEventListener('click', () => {
-            if(confirm('Tem certeza que deseja sair? O seu progresso atual não será salvo.')) {
-                showView('selection');
-            }
-        });
-    }
-
     if(btnBackBayesian) {
         btnBackBayesian.addEventListener('click', () => {
             showView('selection');
         });
     }
 
-    diaryInput.addEventListener('input', function() {
-        this.style.height = 'auto';
-        this.style.height = (this.scrollHeight < 160 ? this.scrollHeight : 160) + 'px';
-        if(this.value === '') this.style.height = 'auto';
-    });
-
-
-
-    function addMessage(sender, text) {
-        const msgDiv = document.createElement('div');
-        const isApp = sender === 'app';
-        
-        const formattedText = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
-        
-        if (isApp) {
-            msgDiv.className = `flex flex-col gap-2 max-w-3xl animate-in fade-in slide-in-from-bottom-4 duration-700`;
-            msgDiv.innerHTML = `
-                <div class="flex items-center gap-2 mb-1">
-                    <div class="w-6 h-6 bg-primary-container rounded-full flex items-center justify-center">
-                        <span class="material-symbols-outlined text-[14px] text-on-primary">auto_awesome</span>
-                    </div>
-                    <span class="font-label-md text-label-md text-primary font-semibold">Tutor Literário</span>
-                </div>
-                <div class="chat-bubble-ai px-4">
-                    <p class="font-body-md text-body-md text-on-surface-variant">${formattedText}</p>
-                </div>
-            `;
-        } else {
-            msgDiv.className = `flex flex-col gap-2 max-w-3xl ml-auto text-right animate-in fade-in slide-in-from-bottom-4 duration-500`;
-            msgDiv.innerHTML = `
-                <div class="flex items-center gap-2 mb-1 justify-end">
-                    <span class="font-label-md text-label-md text-secondary font-semibold">Sua Reflexão</span>
-                    <div class="w-6 h-6 bg-secondary-container rounded-full flex items-center justify-center">
-                        <span class="material-symbols-outlined text-[14px] text-on-secondary-container">person</span>
-                    </div>
-                </div>
-                <div class="bg-surface-container border border-outline-variant p-4 rounded-xl shadow-sm text-left">
-                    <p class="font-body-md text-body-md text-on-surface">${formattedText}</p>
-                </div>
-            `;
-        }
-        
-        chatContainer.appendChild(msgDiv);
-        setTimeout(() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }), 100);
-    }
-
-    function addTypingIndicator(id) {
-        const msgDiv = document.createElement('div');
-        msgDiv.id = id;
-        msgDiv.className = `flex flex-col gap-2 max-w-3xl animate-in fade-in slide-in-from-bottom-4 duration-700`;
-        msgDiv.innerHTML = `
-            <div class="flex items-center gap-2 mb-1">
-                <div class="w-6 h-6 bg-primary-container rounded-full flex items-center justify-center">
-                    <span class="material-symbols-outlined text-[14px] text-on-primary">auto_awesome</span>
-                </div>
-                <span class="font-label-md text-label-md text-primary font-semibold">Tutor Literário</span>
-            </div>
-            <div class="chat-bubble-ai px-4 py-2 flex items-center gap-1 w-20">
-                <div class="w-2 h-2 bg-on-surface-variant rounded-full animate-bounce"></div>
-                <div class="w-2 h-2 bg-on-surface-variant rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
-                <div class="w-2 h-2 bg-on-surface-variant rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
-            </div>
-        `;
-        chatContainer.appendChild(msgDiv);
-        setTimeout(() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }), 100);
-    }
-
-    function removeTypingIndicator(id) {
-        const el = document.getElementById(id);
-        if (el) el.remove();
-    }
-
-    function initChat() {
-        chatContainer.innerHTML = '';
-        currentQuestionText = `Olá, ${currentStudent}! Que bom te ver por aqui. Vejo que você está lendo **"${currentBook}"**.\n\nPara começarmos, qual parte desse livro mexeu mais com os seus sentimentos ou chamou sua atenção até agora?`;
-        setTimeout(() => addMessage('app', currentQuestionText), 500);
-        btnSend.addEventListener('click', handleSend);
-        // Update teacher metrics after any new session is saved
-        const originalHandleSend = handleSend;
-        handleSend = async function() {
-            await originalHandleSend();
-            // After session possibly saved, refresh metrics
-            await loadSessions();
-            updateMetrics();
-        };
-    }
-
-    diaryInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            handleSend();
-        }
-    });
-
-    async function handleSend() {
-        const text = diaryInput.value.trim();
-        if (!text) return;
-
-        addMessage('user', text);
-        diaryInput.value = '';
-        diaryInput.style.height = 'auto';
-        
-        btnSend.disabled = true;
-        diaryInput.disabled = true;
-        
-        currentSession.history.push({
-            question: currentQuestionText,
-            answer: text,
-            probabilityAfter: 0.5 // Default já que não usa mais o bayesian aqui
-        });
-
-        questionsAsked++;
-
-        if (questionsAsked > 2) {
-            // Finaliza a sessão e salva no Supabase
-            addMessage('app', "*Salvando seus registros na nuvem... aguarde.*");
-            
-            const { error } = await supabase.from('sessions').insert([currentSession]);
-            
-            if (!error) {
-                addMessage('app', "Muito obrigado por compartilhar suas ideias! O registro do seu diário de hoje foi salvo com sucesso. Pode fechar o app e até a próxima leitura!");
-                diaryInput.placeholder = "Diário salvo e concluído por hoje.";
-            } else {
-                addMessage('app', "Houve um erro ao salvar na nuvem. Mas não se preocupe, o professor foi notificado.");
-                console.error(error);
-            }
-        } else {
-            const typingId = 'typing-' + Date.now();
-            addTypingIndicator(typingId);
-            
-            const aiResponse = await getGroqResponse(currentStudent, currentBook, currentSession.history, text);
-            
-            removeTypingIndicator(typingId);
-            
-            currentQuestionText = aiResponse;
-            addMessage('app', currentQuestionText);
-            
-            btnSend.disabled = false;
-            diaryInput.disabled = false;
-            diaryInput.focus();
-        }
-    }
 
     // ----- PAINEL DO PROFESSOR ----- //
     function updateMetrics(){
