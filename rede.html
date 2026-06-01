@@ -197,7 +197,7 @@
         // Referências DOM
         let viewProfile, viewFeed, btnEditProfile, inputName, selectGrade, inputClass, avatarSelection, inputSelectedAvatar, btnSaveProfile, selectComposerBook, inputComposerText, imgComposerAvatar, btnPost, feedStream, emojiBtns;
 
-        document.addEventListener('DOMContentLoaded', () => {
+        function inicializarApp() {
             try {
                 // Inicializando DOM
                 viewProfile = document.getElementById('view-profile');
@@ -255,7 +255,13 @@
                     </div>
                 `;
             }
-        });
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', inicializarApp);
+        } else {
+            inicializarApp();
+        }
 
         async function init() {
             renderAvatarOptions();
