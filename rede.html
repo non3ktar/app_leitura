@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rede Literária</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'paper': '#f4ecd8',
+                        'paper-light': '#fffaf0',
+                        'ink': '#2c1e16',
+                        'ink-light': '#4a3525',
+                        'leather': '#8b4513',
+                        'gold': '#c5a059',
+                        'border-paper': '#d6cbb7',
+                        'burgundy': '#800020'
+                    },
+                    fontFamily: {
+                        'serif': ['Libre Caslon Text', 'serif'],
+                        'body': ['Crimson Text', 'serif']
+                    },
+                    boxShadow: {
+                        'vintage': '4px 4px 0px 0px rgba(139,69,19,0.2)',
+                        'vintage-hover': '2px 2px 0px 0px rgba(139,69,19,0.2)'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #f4ecd8;
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E");
+            color: #2c1e16;
+        }
+        .vintage-border {
+            border: 2px solid #8b4513;
+            border-radius: 8px;
+        }
+        .vintage-input {
+            background-color: #fffaf0;
+            border: 1px solid #d6cbb7;
+            border-radius: 4px;
+        }
+        .vintage-input:focus {
+            outline: none;
+            border-color: #8b4513;
+            box-shadow: 0 0 0 2px rgba(139,69,19,0.1);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #d6cbb7; border-radius: 10px; }
+        
+        /* Glassmorphism for fixed header */
+        .glass-header {
+            background: rgba(244, 236, 216, 0.85);
+            backdrop-filter: blur(8px);
+            border-bottom: 1px solid rgba(139, 69, 19, 0.2);
+        }
+    </style>
+</head>
+<body class="font-body min-h-screen flex flex-col relative">
+
+    <!-- Header -->
+    <header class="glass-header w-full top-0 sticky z-50">
+        <div class="flex justify-between items-center px-6 py-4 max-w-3xl mx-auto">
+            <div class="flex items-center gap-3">
+                <a href="index.html" class="text-ink hover:text-leather transition-colors p-2 rounded-full hover:bg-leather/10">
+                    <span class="material-symbols-outlined">arrow_back</span>
+                </a>
+                <h1 class="font-serif text-2xl font-bold text-ink flex items-center gap-2">
+                    <span class="material-symbols-outlined text-gold">local_library</span>
+                    Rede Literária
+                </h1>
+            </div>
+            <button id="btn-edit-profile" class="text-ink hover:text-leather transition-colors p-2 rounded-full hover:bg-leather/10 hidden" title="Editar Perfil">
+                <span class="material-symbols-outlined">manage_accounts</span>
+            </button>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-3xl mx-auto w-full px-4 py-8 relative">
+        
+        <!-- View: Profile Setup -->
+        <section id="view-profile" class="hidden flex-col items-center justify-center min-h-[60vh] animate-[fadeIn_0.5s_ease-out]">
+            <div class="bg-paper-light vintage-border shadow-vintage p-8 w-full max-w-md relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-gold via-leather to-burgundy opacity-80"></div>
+                
+                <h2 class="font-serif text-3xl text-center mb-2 text-ink">Seu Perfil Leitor</h2>
+                <p class="text-center text-ink-light mb-8 italic">Como você será conhecido nesta biblioteca?</p>
+
+                <div class="space-y-5">
+                    <div>
+                        <label class="block font-serif text-ink mb-1 font-bold">Nome de Leitor</label>
+                        <input type="text" id="profile-name" class="w-full vintage-input p-3 font-body text-lg" placeholder="Seu nome...">
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block font-serif text-ink mb-1 font-bold">Série/Ano</label>
+                            <select id="profile-grade" class="w-full vintage-input p-3 font-body text-lg cursor-pointer">
+                                <option value="" disabled selected>Selecione...</option>
+                                <option value="6º Ano">6º Ano</option>
+                                <option value="7º Ano">7º Ano</option>
+                                <option value="8º Ano">8º Ano</option>
+                                <option value="9º Ano">9º Ano</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block font-serif text-ink mb-1 font-bold">Turma</label>
+                            <input type="text" id="profile-class" class="w-full vintage-input p-3 font-body text-lg" placeholder="Ex: A, B, C...">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block font-serif text-ink mb-2 font-bold">Escolha seu Avatar Místico</label>
+                        <div class="grid grid-cols-4 gap-3" id="avatar-selection">
+                            <!-- JS will populate -->
+                        </div>
+                        <input type="hidden" id="selected-avatar" value="">
+                    </div>
+
+                    <button id="btn-save-profile" class="w-full bg-leather text-paper-light font-serif text-lg py-3 rounded-md hover:bg-ink transition-colors shadow-sm mt-4 border border-ink flex justify-center items-center gap-2">
+                        <span class="material-symbols-outlined">edit_square</span>
+                        Assinar Registro
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- View: Feed -->
+        <section id="view-feed" class="hidden flex-col gap-8 animate-[fadeIn_0.5s_ease-out]">
+            
+            <!-- Composer -->
+            <div class="bg-paper-light vintage-border shadow-sm p-6 relative">
+                <div class="flex gap-4">
+                    <img id="composer-avatar" src="" alt="Avatar" class="w-12 h-12 rounded-full border-2 border-gold bg-paper">
+                    <div class="flex-1">
+                        <select id="composer-book" class="w-full vintage-input p-2 font-body text-ink mb-3 cursor-pointer text-sm font-bold">
+                            <option value="" disabled selected>Sobre qual livro você quer falar?</option>
+                            <!-- JS will populate -->
+                        </select>
+                        
+                        <textarea id="composer-text" class="w-full vintage-input p-3 font-body text-lg resize-none min-h-[100px]" placeholder="Compartilhe suas impressões. O que você achou? (Apenas texto e emojis)"></textarea>
+                        
+                        <div class="flex justify-between items-center mt-3 border-t border-border-paper pt-3">
+                            <div class="flex gap-2" id="emoji-bar">
+                                <button class="hover:bg-border-paper p-1 rounded transition-colors text-xl emoji-btn">📖</button>
+                                <button class="hover:bg-border-paper p-1 rounded transition-colors text-xl emoji-btn">✨</button>
+                                <button class="hover:bg-border-paper p-1 rounded transition-colors text-xl emoji-btn">🤔</button>
+                                <button class="hover:bg-border-paper p-1 rounded transition-colors text-xl emoji-btn">❤️</button>
+                                <button class="hover:bg-border-paper p-1 rounded transition-colors text-xl emoji-btn">🤯</button>
+                            </div>
+                            <button id="btn-post" class="bg-leather text-paper-light px-6 py-2 rounded font-serif hover:bg-ink transition-colors shadow-sm text-sm border border-ink flex items-center gap-2">
+                                <span class="material-symbols-outlined text-sm">send</span>
+                                Publicar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Feed Stream -->
+            <div id="feed-stream" class="flex flex-col gap-6 pb-20">
+                <div class="text-center text-ink-light py-10 font-serif italic">
+                    <span class="material-symbols-outlined text-4xl mb-2 opacity-50">auto_stories</span>
+                    <p>Buscando pergaminhos na biblioteca...</p>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <script>
+        // Configurações do Supabase
+        const SUPABASE_URL = 'https://zmiyiuhevujyxjcukdpe.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InptaXlpdWhldnVqeXhqY3VrZHBlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3Mjg0MjgsImV4cCI6MjA5NTMwNDQyOH0.fDzK49FEKXvCNs6X7RYv-qvj-eYJm7pVTbGZ5twvOR4';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // Avatares Místicos (DiceBear Seeds - Bottts ou Adventurer)
+        const avatarSeeds = ['Felix', 'Whiskers', 'Luna', 'Oliver', 'Milo', 'Loki', 'Garfield', 'Simba'];
+        const avatarStyle = 'adventurer'; // Outras opções: bottts, lorelei, fun-emoji
+
+        // Estado
+        let myProfile = JSON.parse(localStorage.getItem('leitura_profile') || 'null');
+        let availableBooks = [];
+
+        // DOM
+        const viewProfile = document.getElementById('view-profile');
+        const viewFeed = document.getElementById('view-feed');
+        const btnEditProfile = document.getElementById('btn-edit-profile');
+        
+        // Profile DOM
+        const inputName = document.getElementById('profile-name');
+        const selectGrade = document.getElementById('profile-grade');
+        const inputClass = document.getElementById('profile-class');
+        const avatarSelection = document.getElementById('avatar-selection');
+        const inputSelectedAvatar = document.getElementById('selected-avatar');
+        const btnSaveProfile = document.getElementById('btn-save-profile');
+
+        // Feed DOM
+        const selectComposerBook = document.getElementById('composer-book');
+        const inputComposerText = document.getElementById('composer-text');
+        const imgComposerAvatar = document.getElementById('composer-avatar');
+        const btnPost = document.getElementById('btn-post');
+        const feedStream = document.getElementById('feed-stream');
+        const emojiBtns = document.querySelectorAll('.emoji-btn');
+
+        // Inicialização
+        async function init() {
+            renderAvatarOptions();
+            
+            if (myProfile) {
+                showView('feed');
+                imgComposerAvatar.src = getAvatarUrl(myProfile.avatar);
+                btnEditProfile.classList.remove('hidden');
+                await fetchBooks();
+                await fetchFeed();
+            } else {
+                showView('profile');
+            }
+        }
+
+        function showView(view) {
+            viewProfile.classList.add('hidden');
+            viewFeed.classList.add('hidden');
+            
+            if (view === 'profile') {
+                viewProfile.classList.remove('hidden');
+                viewProfile.classList.add('flex');
+                if (myProfile) {
+                    inputName.value = myProfile.name;
+                    selectGrade.value = myProfile.grade;
+                    inputClass.value = myProfile.class;
+                    selectAvatar(myProfile.avatar);
+                }
+            } else if (view === 'feed') {
+                viewFeed.classList.remove('hidden');
+                viewFeed.classList.add('flex');
+            }
+        }
+
+        // Avatares
+        function getAvatarUrl(seed) {
+            return `https://api.dicebear.com/8.x/${avatarStyle}/svg?seed=${seed}&backgroundColor=f4ecd8`;
+        }
+
+        function renderAvatarOptions() {
+            avatarSelection.innerHTML = '';
+            avatarSeeds.forEach(seed => {
+                const div = document.createElement('div');
+                div.className = 'cursor-pointer p-1 rounded-lg border-2 border-transparent hover:border-gold transition-all';
+                div.dataset.seed = seed;
+                div.innerHTML = `<img src="${getAvatarUrl(seed)}" alt="${seed}" class="w-full h-auto rounded bg-paper shadow-sm">`;
+                
+                div.addEventListener('click', () => selectAvatar(seed));
+                avatarSelection.appendChild(div);
+            });
+        }
+
+        function selectAvatar(seed) {
+            inputSelectedAvatar.value = seed;
+            Array.from(avatarSelection.children).forEach(child => {
+                if (child.dataset.seed === seed) {
+                    child.classList.remove('border-transparent');
+                    child.classList.add('border-burgundy', 'bg-gold/20');
+                } else {
+                    child.classList.add('border-transparent');
+                    child.classList.remove('border-burgundy', 'bg-gold/20');
+                }
+            });
+        }
+
+        // Salvar Perfil
+        btnSaveProfile.addEventListener('click', async () => {
+            const name = inputName.value.trim();
+            const grade = selectGrade.value;
+            const classRoom = inputClass.value.trim().toUpperCase();
+            const avatar = inputSelectedAvatar.value;
+
+            if (!name || !grade || !classRoom || !avatar) {
+                alert("Por favor, preencha todos os campos e escolha um avatar mágico.");
+                return;
+            }
+
+            myProfile = { name, grade, class: classRoom, avatar };
+            localStorage.setItem('leitura_profile', JSON.stringify(myProfile));
+            
+            imgComposerAvatar.src = getAvatarUrl(myProfile.avatar);
+            btnEditProfile.classList.remove('hidden');
+            
+            showView('feed');
+            if (availableBooks.length === 0) {
+                await fetchBooks();
+            }
+            fetchFeed();
+        });
+
+        btnEditProfile.addEventListener('click', () => {
+            showView('profile');
+        });
+
+        // Buscar Livros
+        async function fetchBooks() {
+            const { data, error } = await supabase.from('books').select('*').order('title', { ascending: true });
+            if (!error && data) {
+                availableBooks = data;
+                selectComposerBook.innerHTML = '<option value="" disabled selected>Sobre qual livro você quer falar?</option>';
+                data.forEach(book => {
+                    const opt = document.createElement('option');
+                    opt.value = book.title;
+                    opt.textContent = book.title;
+                    selectComposerBook.appendChild(opt);
+                });
+            }
+        }
+
+        // Emojis no composer
+        emojiBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                inputComposerText.value += btn.textContent;
+                inputComposerText.focus();
+            });
+        });
+
+        // Postar
+        btnPost.addEventListener('click', async () => {
+            const bookTitle = selectComposerBook.value;
+            const text = inputComposerText.value.trim();
+
+            if (!bookTitle) {
+                alert("Escolha um livro para sua reflexão.");
+                return;
+            }
+            if (!text) {
+                alert("A pena está seca! Escreva algo antes de publicar.");
+                return;
+            }
+
+            btnPost.disabled = true;
+            btnPost.innerHTML = "Enviando...";
+
+            const postData = {
+                student_name: myProfile.name,
+                grade: myProfile.grade,
+                class_name: myProfile.class,
+                avatar_seed: myProfile.avatar,
+                book_title: bookTitle,
+                content: text
+            };
+
+            const { error } = await supabase.from('feed_posts').insert([postData]);
+
+            if (error) {
+                console.error("Erro ao postar:", error);
+                alert("As corujas mensageiras falharam. Tente novamente mais tarde. (Verifique se a tabela 'feed_posts' foi criada no Supabase)");
+            } else {
+                inputComposerText.value = '';
+                selectComposerBook.value = '';
+                await fetchFeed();
+            }
+
+            btnPost.disabled = false;
+            btnPost.innerHTML = `<span class="material-symbols-outlined text-sm">send</span> Publicar`;
+        });
+
+        // Buscar Feed
+        async function fetchFeed() {
+            const { data, error } = await supabase
+                .from('feed_posts')
+                .select('*')
+                .order('created_at', { ascending: false })
+                .limit(50);
+
+            if (error) {
+                console.error("Erro ao buscar feed:", error);
+                feedStream.innerHTML = `
+                    <div class="text-center text-error py-10 font-body border border-error bg-error-container/20 rounded p-4">
+                        <p>O arquivo da biblioteca não pôde ser acessado.</p>
+                        <p class="text-sm mt-2">Nota ao Professor: Certifique-se de criar a tabela <b>feed_posts</b> no Supabase com as colunas: id, student_name, grade, class_name, avatar_seed, book_title, content, created_at.</p>
+                    </div>`;
+                return;
+            }
+
+            feedStream.innerHTML = '';
+
+            if (data.length === 0) {
+                feedStream.innerHTML = `
+                    <div class="text-center text-ink-light py-10 font-serif italic">
+                        <span class="material-symbols-outlined text-4xl mb-2 opacity-50">import_contacts</span>
+                        <p>Ainda não há relatos nesta biblioteca. Seja o primeiro a escrever!</p>
+                    </div>`;
+                return;
+            }
+
+            data.forEach(post => {
+                const date = new Date(post.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+                
+                // Escape simple HTML to prevent XSS but allow emojis
+                const safeContent = post.content
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;")
+                    .replace(/'/g, "&#039;")
+                    .replace(/\n/g, "<br>");
+
+                const postHtml = `
+                    <div class="bg-paper-light vintage-border shadow-sm p-5 animate-[fadeIn_0.5s_ease-out]">
+                        <div class="flex gap-4 mb-3">
+                            <img src="${getAvatarUrl(post.avatar_seed)}" alt="Avatar" class="w-14 h-14 rounded border border-border-paper bg-paper shrink-0">
+                            <div class="flex-1">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <h3 class="font-serif font-bold text-ink text-lg leading-tight">${post.student_name}</h3>
+                                        <p class="font-body text-ink-light text-sm italic">${post.grade} - Turma ${post.class_name}</p>
+                                    </div>
+                                    <span class="font-body text-xs text-ink-light opacity-70">${date}</span>
+                                </div>
+                                <div class="mt-2 inline-flex items-center gap-1 bg-gold/20 text-ink-light text-xs font-bold px-2 py-1 rounded border border-gold/40">
+                                    <span class="material-symbols-outlined text-[14px]">menu_book</span>
+                                    Lendo: ${post.book_title}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="font-body text-ink text-lg leading-relaxed mt-2 pl-2 border-l-2 border-leather/30">
+                            ${safeContent}
+                        </div>
+                    </div>
+                `;
+                feedStream.insertAdjacentHTML('beforeend', postHtml);
+            });
+        }
+
+        // Run
+        init();
+    </script>
+</body>
+</html>
