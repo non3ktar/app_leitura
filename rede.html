@@ -184,41 +184,79 @@
     </main>
 
     <script>
-        // Configurações do Supabase
+        // Configurações e Variáveis Globais
         const SUPABASE_URL = 'https://zmiyiuhevujyxjcukdpe.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InptaXlpdWhldnVqeXhqY3VrZHBlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3Mjg0MjgsImV4cCI6MjA5NTMwNDQyOH0.fDzK49FEKXvCNs6X7RYv-qvj-eYJm7pVTbGZ5twvOR4';
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-        // Avatares Místicos (DiceBear Seeds - Bottts ou Adventurer)
+        
+        let supabase;
         const avatarSeeds = ['Felix', 'Whiskers', 'Luna', 'Oliver', 'Milo', 'Loki', 'Garfield', 'Simba'];
-        const avatarStyle = 'adventurer'; // Outras opções: bottts, lorelei, fun-emoji
-
-        // Estado
-        let myProfile = JSON.parse(localStorage.getItem('leitura_profile') || 'null');
+        const avatarStyle = 'adventurer';
+        let myProfile = null;
         let availableBooks = [];
 
-        // DOM
-        const viewProfile = document.getElementById('view-profile');
-        const viewFeed = document.getElementById('view-feed');
-        const btnEditProfile = document.getElementById('btn-edit-profile');
-        
-        // Profile DOM
-        const inputName = document.getElementById('profile-name');
-        const selectGrade = document.getElementById('profile-grade');
-        const inputClass = document.getElementById('profile-class');
-        const avatarSelection = document.getElementById('avatar-selection');
-        const inputSelectedAvatar = document.getElementById('selected-avatar');
-        const btnSaveProfile = document.getElementById('btn-save-profile');
+        // Referências DOM
+        let viewProfile, viewFeed, btnEditProfile, inputName, selectGrade, inputClass, avatarSelection, inputSelectedAvatar, btnSaveProfile, selectComposerBook, inputComposerText, imgComposerAvatar, btnPost, feedStream, emojiBtns;
 
-        // Feed DOM
-        const selectComposerBook = document.getElementById('composer-book');
-        const inputComposerText = document.getElementById('composer-text');
-        const imgComposerAvatar = document.getElementById('composer-avatar');
-        const btnPost = document.getElementById('btn-post');
-        const feedStream = document.getElementById('feed-stream');
-        const emojiBtns = document.querySelectorAll('.emoji-btn');
+        document.addEventListener('DOMContentLoaded', () => {
+            try {
+                // Inicializando DOM
+                viewProfile = document.getElementById('view-profile');
+                viewFeed = document.getElementById('view-feed');
+                btnEditProfile = document.getElementById('btn-edit-profile');
+                inputName = document.getElementById('profile-name');
+                selectGrade = document.getElementById('profile-grade');
+                inputClass = document.getElementById('profile-class');
+                avatarSelection = document.getElementById('avatar-selection');
+                inputSelectedAvatar = document.getElementById('selected-avatar');
+                btnSaveProfile = document.getElementById('btn-save-profile');
+                selectComposerBook = document.getElementById('composer-book');
+                inputComposerText = document.getElementById('composer-text');
+                imgComposerAvatar = document.getElementById('composer-avatar');
+                btnPost = document.getElementById('btn-post');
+                feedStream = document.getElementById('feed-stream');
+                emojiBtns = document.querySelectorAll('.emoji-btn');
 
-        // Inicialização
+                // Inicializando Supabase
+                if (typeof window.supabase === 'undefined') {
+                    throw new Error("A conexão principal não foi carregada. Verifique se a sua rede bloqueou o carregamento dos scripts (ou adblock).");
+                }
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+                // Lendo Perfil
+                try {
+                    myProfile = JSON.parse(localStorage.getItem('leitura_profile') || 'null');
+                } catch(e) {
+                    console.error("Erro no cache:", e);
+                    myProfile = null;
+                }
+
+                // Event Listeners
+                btnSaveProfile.addEventListener('click', saveProfileHandler);
+                btnEditProfile.addEventListener('click', () => showView('profile'));
+                btnPost.addEventListener('click', postHandler);
+                emojiBtns.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        inputComposerText.value += btn.textContent;
+                        inputComposerText.focus();
+                    });
+                });
+
+                // Iniciar
+                init();
+
+            } catch (err) {
+                console.error("Erro Crítico:", err);
+                document.querySelector('main').innerHTML = `
+                    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                      <strong class="font-bold">Houve um erro mágico!</strong>
+                      <span class="block sm:inline">${err.message}</span>
+                      <br><br>
+                      <button onclick="window.location.reload()" class="bg-red-700 text-white px-4 py-2 rounded">Recarregar Página</button>
+                    </div>
+                `;
+            }
+        });
+
         async function init() {
             renderAvatarOptions();
             
@@ -252,9 +290,8 @@
             }
         }
 
-        // Avatares
         function getAvatarUrl(seed) {
-            return `https://api.dicebear.com/8.x/${avatarStyle}/svg?seed=${seed}&backgroundColor=f4ecd8`;
+            return \`https://api.dicebear.com/8.x/\${avatarStyle}/svg?seed=\${seed}&backgroundColor=f4ecd8\`;
         }
 
         function renderAvatarOptions() {
@@ -263,8 +300,7 @@
                 const div = document.createElement('div');
                 div.className = 'cursor-pointer p-1 rounded-lg border-2 border-transparent hover:border-gold transition-all';
                 div.dataset.seed = seed;
-                div.innerHTML = `<img src="${getAvatarUrl(seed)}" alt="${seed}" class="w-full h-auto rounded bg-paper shadow-sm">`;
-                
+                div.innerHTML = \`<img src="\${getAvatarUrl(seed)}" alt="\${seed}" class="w-full h-auto rounded bg-paper shadow-sm">\`;
                 div.addEventListener('click', () => selectAvatar(seed));
                 avatarSelection.appendChild(div);
             });
@@ -283,8 +319,7 @@
             });
         }
 
-        // Salvar Perfil
-        btnSaveProfile.addEventListener('click', async () => {
+        async function saveProfileHandler() {
             const name = inputName.value.trim();
             const grade = selectGrade.value;
             const classRoom = inputClass.value.trim().toUpperCase();
@@ -306,37 +341,27 @@
                 await fetchBooks();
             }
             fetchFeed();
-        });
+        }
 
-        btnEditProfile.addEventListener('click', () => {
-            showView('profile');
-        });
-
-        // Buscar Livros
         async function fetchBooks() {
-            const { data, error } = await supabase.from('books').select('*').order('title', { ascending: true });
-            if (!error && data) {
-                availableBooks = data;
-                selectComposerBook.innerHTML = '<option value="" disabled selected>Sobre qual livro você quer falar?</option>';
-                data.forEach(book => {
-                    const opt = document.createElement('option');
-                    opt.value = book.title;
-                    opt.textContent = book.title;
-                    selectComposerBook.appendChild(opt);
-                });
+            try {
+                const { data, error } = await supabase.from('books').select('*').order('title', { ascending: true });
+                if (!error && data) {
+                    availableBooks = data;
+                    selectComposerBook.innerHTML = '<option value="" disabled selected>Sobre qual livro você quer falar?</option>';
+                    data.forEach(book => {
+                        const opt = document.createElement('option');
+                        opt.value = book.title;
+                        opt.textContent = book.title;
+                        selectComposerBook.appendChild(opt);
+                    });
+                }
+            } catch(e) {
+                console.error(e);
             }
         }
 
-        // Emojis no composer
-        emojiBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                inputComposerText.value += btn.textContent;
-                inputComposerText.focus();
-            });
-        });
-
-        // Postar
-        btnPost.addEventListener('click', async () => {
+        async function postHandler() {
             const bookTitle = selectComposerBook.value;
             const text = inputComposerText.value.trim();
 
@@ -361,91 +386,95 @@
                 content: text
             };
 
-            const { error } = await supabase.from('feed_posts').insert([postData]);
+            try {
+                const { error } = await supabase.from('feed_posts').insert([postData]);
 
-            if (error) {
-                console.error("Erro ao postar:", error);
-                alert("As corujas mensageiras falharam. Tente novamente mais tarde. (Verifique se a tabela 'feed_posts' foi criada no Supabase)");
-            } else {
-                inputComposerText.value = '';
-                selectComposerBook.value = '';
-                await fetchFeed();
+                if (error) {
+                    console.error("Erro ao postar:", error);
+                    alert("As corujas mensageiras falharam. Tente novamente mais tarde.");
+                } else {
+                    inputComposerText.value = '';
+                    selectComposerBook.value = '';
+                    await fetchFeed();
+                }
+            } catch(e) {
+                console.error(e);
+                alert("Erro inesperado ao postar.");
             }
 
             btnPost.disabled = false;
-            btnPost.innerHTML = `<span class="material-symbols-outlined text-sm">send</span> Publicar`;
-        });
-
-        // Buscar Feed
-        async function fetchFeed() {
-            const { data, error } = await supabase
-                .from('feed_posts')
-                .select('*')
-                .order('created_at', { ascending: false })
-                .limit(50);
-
-            if (error) {
-                console.error("Erro ao buscar feed:", error);
-                feedStream.innerHTML = `
-                    <div class="text-center text-error py-10 font-body border border-error bg-error-container/20 rounded p-4">
-                        <p>O arquivo da biblioteca não pôde ser acessado.</p>
-                        <p class="text-sm mt-2">Nota ao Professor: Certifique-se de criar a tabela <b>feed_posts</b> no Supabase com as colunas: id, student_name, grade, class_name, avatar_seed, book_title, content, created_at.</p>
-                    </div>`;
-                return;
-            }
-
-            feedStream.innerHTML = '';
-
-            if (data.length === 0) {
-                feedStream.innerHTML = `
-                    <div class="text-center text-ink-light py-10 font-serif italic">
-                        <span class="material-symbols-outlined text-4xl mb-2 opacity-50">import_contacts</span>
-                        <p>Ainda não há relatos nesta biblioteca. Seja o primeiro a escrever!</p>
-                    </div>`;
-                return;
-            }
-
-            data.forEach(post => {
-                const date = new Date(post.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
-                
-                // Escape simple HTML to prevent XSS but allow emojis
-                const safeContent = post.content
-                    .replace(/&/g, "&amp;")
-                    .replace(/</g, "&lt;")
-                    .replace(/>/g, "&gt;")
-                    .replace(/"/g, "&quot;")
-                    .replace(/'/g, "&#039;")
-                    .replace(/\n/g, "<br>");
-
-                const postHtml = `
-                    <div class="bg-paper-light vintage-border shadow-sm p-5 animate-[fadeIn_0.5s_ease-out]">
-                        <div class="flex gap-4 mb-3">
-                            <img src="${getAvatarUrl(post.avatar_seed)}" alt="Avatar" class="w-14 h-14 rounded border border-border-paper bg-paper shrink-0">
-                            <div class="flex-1">
-                                <div class="flex justify-between items-start">
-                                    <div>
-                                        <h3 class="font-serif font-bold text-ink text-lg leading-tight">${post.student_name}</h3>
-                                        <p class="font-body text-ink-light text-sm italic">${post.grade} - Turma ${post.class_name}</p>
-                                    </div>
-                                    <span class="font-body text-xs text-ink-light opacity-70">${date}</span>
-                                </div>
-                                <div class="mt-2 inline-flex items-center gap-1 bg-gold/20 text-ink-light text-xs font-bold px-2 py-1 rounded border border-gold/40">
-                                    <span class="material-symbols-outlined text-[14px]">menu_book</span>
-                                    Lendo: ${post.book_title}
-                                </div>
-                            </div>
-                        </div>
-                        <div class="font-body text-ink text-lg leading-relaxed mt-2 pl-2 border-l-2 border-leather/30">
-                            ${safeContent}
-                        </div>
-                    </div>
-                `;
-                feedStream.insertAdjacentHTML('beforeend', postHtml);
-            });
+            btnPost.innerHTML = \`<span class="material-symbols-outlined text-sm">send</span> Publicar\`;
         }
 
-        // Run
-        init();
+        async function fetchFeed() {
+            try {
+                const { data, error } = await supabase
+                    .from('feed_posts')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(50);
+
+                if (error) {
+                    console.error("Erro ao buscar feed:", error);
+                    feedStream.innerHTML = \`
+                        <div class="text-center text-error py-10 font-body border border-error bg-error-container/20 rounded p-4">
+                            <p>O arquivo da biblioteca não pôde ser acessado.</p>
+                            <p class="text-sm mt-2">\${error.message}</p>
+                        </div>\`;
+                    return;
+                }
+
+                feedStream.innerHTML = '';
+
+                if (data.length === 0) {
+                    feedStream.innerHTML = \`
+                        <div class="text-center text-ink-light py-10 font-serif italic">
+                            <span class="material-symbols-outlined text-4xl mb-2 opacity-50">import_contacts</span>
+                            <p>Ainda não há relatos nesta biblioteca. Seja o primeiro a escrever!</p>
+                        </div>\`;
+                    return;
+                }
+
+                data.forEach(post => {
+                    const date = new Date(post.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+                    
+                    const safeContent = post.content
+                        .replace(/&/g, "&amp;")
+                        .replace(/</g, "&lt;")
+                        .replace(/>/g, "&gt;")
+                        .replace(/"/g, "&quot;")
+                        .replace(/'/g, "&#039;")
+                        .replace(/\\n/g, "<br>");
+
+                    const postHtml = \`
+                        <div class="bg-paper-light vintage-border shadow-sm p-5 animate-[fadeIn_0.5s_ease-out]">
+                            <div class="flex gap-4 mb-3">
+                                <img src="\${getAvatarUrl(post.avatar_seed)}" alt="Avatar" class="w-14 h-14 rounded border border-border-paper bg-paper shrink-0">
+                                <div class="flex-1">
+                                    <div class="flex justify-between items-start">
+                                        <div>
+                                            <h3 class="font-serif font-bold text-ink text-lg leading-tight">\${post.student_name}</h3>
+                                            <p class="font-body text-ink-light text-sm italic">\${post.grade} - Turma \${post.class_name}</p>
+                                        </div>
+                                        <span class="font-body text-xs text-ink-light opacity-70">\${date}</span>
+                                    </div>
+                                    <div class="mt-2 inline-flex items-center gap-1 bg-gold/20 text-ink-light text-xs font-bold px-2 py-1 rounded border border-gold/40">
+                                        <span class="material-symbols-outlined text-[14px]">menu_book</span>
+                                        Lendo: \${post.book_title}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="font-body text-ink text-lg leading-relaxed mt-2 pl-2 border-l-2 border-leather/30">
+                                \${safeContent}
+                            </div>
+                        </div>
+                    \`;
+                    feedStream.insertAdjacentHTML('beforeend', postHtml);
+                });
+            } catch(e) {
+                console.error(e);
+            }
+        }
     </script>
 </body>
 </html>
