@@ -84,8 +84,9 @@
                     Rede Literária
                 </h1>
             </div>
-            <button id="btn-edit-profile" class="text-ink hover:text-leather transition-colors p-2 rounded-full hover:bg-leather/10 hidden" title="Editar Perfil">
-                <span class="material-symbols-outlined">manage_accounts</span>
+            <button id="btn-edit-profile" class="hidden flex items-center gap-2 bg-paper-light border border-border-paper px-3 py-1.5 rounded-full hover:bg-gold/20 hover:border-gold transition-colors shadow-sm group" title="Editar Perfil">
+                <span class="font-serif text-sm font-bold text-ink group-hover:text-leather" id="header-name">Perfil</span>
+                <img id="header-avatar" src="" alt="Avatar" class="w-7 h-7 rounded-full border border-leather bg-paper">
             </button>
         </div>
     </header>
@@ -98,7 +99,20 @@
                 <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-gold via-leather to-burgundy opacity-80"></div>
                 
                 <h2 class="font-serif text-3xl text-center mb-2 text-ink">Seu Perfil Leitor</h2>
-                <p class="text-center text-ink-light mb-8 italic">Como você será conhecido nesta biblioteca?</p>
+                <p class="text-center text-ink-light mb-6 italic">Como você será conhecido nesta biblioteca?</p>
+
+                <!-- Como Usar -->
+                <div class="bg-gold/10 border border-gold/40 rounded-lg p-4 mb-6 text-left">
+                    <h3 class="font-serif font-bold text-leather mb-2 flex items-center gap-2 text-sm">
+                        <span class="material-symbols-outlined text-[18px]">menu_book</span> Guia da Rede Literária
+                    </h3>
+                    <ul class="font-body text-sm text-ink-light space-y-2 list-disc pl-5">
+                        <li><strong>Crie sua Identidade:</strong> Escolha um nome, informe sua turma e selecione seu <em>Avatar Místico</em>.</li>
+                        <li><strong>Compartilhe Leituras:</strong> Escreva sobre o livro que está lendo. O que você achou da história? (Permitido emojis! ✨)</li>
+                        <li><strong>Faça Amizades:</strong> Adicione seus colegas à sua lista para poder filtrar o mural facilmente.</li>
+                        <li><strong>Interaja:</strong> Leia as reflexões dos amigos e deixe comentários construtivos.</li>
+                    </ul>
+                </div>
 
                 <div class="space-y-5">
                     <div>
@@ -276,6 +290,8 @@
             if (myProfile) {
                 showView('feed');
                 imgComposerAvatar.src = getAvatarUrl(myProfile.avatar);
+                document.getElementById('header-avatar').src = getAvatarUrl(myProfile.avatar);
+                document.getElementById('header-name').textContent = myProfile.name.split(' ')[0]; // primeiro nome
                 btnEditProfile.classList.remove('hidden');
                 await fetchBooks();
                 await fetchFeed();
@@ -343,10 +359,12 @@
                 return;
             }
 
-            myProfile = { name, grade, class: classRoom, avatar };
+            myProfile = { name, grade, class: classRoom, avatar, friends: (myProfile ? myProfile.friends : []) };
             localStorage.setItem('leitura_profile', JSON.stringify(myProfile));
             
             imgComposerAvatar.src = getAvatarUrl(myProfile.avatar);
+            document.getElementById('header-avatar').src = getAvatarUrl(myProfile.avatar);
+            document.getElementById('header-name').textContent = myProfile.name.split(' ')[0];
             btnEditProfile.classList.remove('hidden');
             
             showView('feed');
