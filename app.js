@@ -653,3 +653,52 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
 });
+
+    window.gerarCertificado = async () => {
+        const btn = document.getElementById('btnDownloadCert');
+        const status = document.getElementById('certStatus');
+        if(!btn || !status) return;
+        
+        btn.disabled = true;
+        btn.classList.add('opacity-50', 'cursor-not-allowed');
+        status.classList.remove('hidden');
+
+        try {
+            const certName = document.getElementById('certStudentName');
+            if(certName) certName.innerText = currentStudent || "Jogador";
+            
+            const template = document.getElementById('certificateTemplate');
+            if(!template) throw new Error("Template do certificado não encontrado no HTML!");
+            
+            const canvas = await html2canvas(template, {
+                scale: 2,
+                useCORS: true,
+                backgroundColor: '#ffffff'
+            });
+
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF('l', 'mm', 'a4');
+            
+            const imgData = canvas.toDataURL('image/jpeg', 0.95);
+            pdf.addImage(imgData, 'JPEG', 0, 0, 297, 210);
+            
+            const safeName = (currentStudent || "Jogador").replace(/\s+/g, '_');
+            pdf.save(`Certificado_Aura_${safeName}.pdf`);
+            
+            status.innerText = "Certificado Baixado com Sucesso! 🎓";
+            status.classList.replace('text-yellow-400', 'text-emerald-400');
+        } catch (err) {
+            console.error(err);
+            status.innerText = "Erro ao gerar PDF. Verifique o console.";
+            status.classList.replace('text-yellow-400', 'text-rose-500');
+        } finally {
+            setTimeout(() => {
+                btn.disabled = false;
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                status.classList.add('hidden');
+                status.innerText = "Gerando seu diploma...";
+                status.classList.remove('text-emerald-400', 'text-rose-500');
+                status.classList.add('text-yellow-400');
+            }, 3000);
+        }
+    };
