@@ -402,18 +402,23 @@ document.addEventListener('DOMContentLoaded', async () => {
             const uniqueArr = Object.values(uniqueMap).sort((a,b) => b.final_probability - a.final_probability);
             
             uniqueArr.forEach((p, idx) => {
+                const isPlatinado = p.final_probability >= 1000;
+                const borderClass = isPlatinado ? 'border-yellow-400/50 bg-yellow-900/20' : 'border-white/5 bg-dark-800/50';
+                const scoreColor = isPlatinado ? 'text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]' : 'text-brand-300';
+                const badge = isPlatinado ? '<span class="text-[10px] bg-yellow-500 text-black font-bold px-2 py-1 rounded ml-2 shadow-[0_0_10px_rgba(234,179,8,0.5)]">🎖️ PLATINADO</span>' : '';
+                
                 const div = document.createElement('div');
-                div.className = "flex items-center justify-between p-4 mb-2 rounded-xl bg-dark-800/50 border border-white/5 hover:bg-white/5 transition-colors";
+                div.className = `flex items-center justify-between p-4 mb-2 rounded-xl ${borderClass} hover:bg-white/10 transition-colors border`;
                 div.innerHTML = `
                     <div class="flex items-center gap-4">
                         <span class="text-2xl font-black text-slate-600 w-6">${idx + 1}</span>
                         <span class="text-xl">👤</span>
                         <div>
-                            <div class="font-bold text-white">${p.student_name}</div>
+                            <div class="font-bold text-white flex items-center">${p.student_name} ${badge}</div>
                             <div class="text-xs text-brand-400">${p.book}</div>
                         </div>
                     </div>
-                    <div class="text-xl font-black text-brand-300">${p.final_probability} ⚡</div>
+                    <div class="text-xl font-black ${scoreColor}">${p.final_probability} ⚡</div>
                 `;
                 list.appendChild(div);
             });
@@ -498,15 +503,20 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
             const initials = session.student_name.substring(0,2).toUpperCase();
             
+            const isPlatinado = session.final_probability >= 1000 && !isFreeWriting && !isBayesian && session.diagnosis?.startsWith('Nível:');
+            
             const div = document.createElement('div');
-            div.className = "p-4 bg-surface rounded-xl border border-outline-variant flex justify-between items-center hover:bg-secondary-container transition-colors cursor-pointer shadow-sm";
+            let borderClass = isPlatinado ? 'border-2 border-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.3)] bg-surface-bright' : 'border border-outline-variant bg-surface';
+            div.className = `p-4 rounded-xl flex justify-between items-center hover:bg-secondary-container transition-all cursor-pointer ${borderClass}`;
             div.onclick = () => openReportModal(index);
+            
+            const platinadoBadge = isPlatinado ? '<span class="text-xs ml-2 bg-yellow-400 text-black px-2 py-0.5 rounded-full font-bold shadow-sm">🎖️ PLATINOU</span>' : '';
             
             div.innerHTML = `
                 <div class="flex items-center gap-4">
                     <div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center text-sm font-label-md font-bold text-on-primary-container">${initials}</div>
                     <div>
-                        <span class="font-title-lg block text-on-surface">${session.student_name}</span>
+                        <span class="font-title-lg block text-on-surface flex items-center">${session.student_name} ${platinadoBadge}</span>
                         <span class="text-sm text-on-surface-variant italic">${session.book} - ${session.date}</span>
                     </div>
                 </div>
