@@ -652,7 +652,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.body.removeChild(a);
     });
 
-});
 
     window.gerarCertificado = async () => {
         const btn = document.getElementById('btnDownloadCert');
@@ -665,7 +664,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         try {
             const certName = document.getElementById('certStudentName');
-            if(certName) certName.innerText = currentStudent || "Jogador";
+            // Use playerData.name or the input field fallback
+            const name = playerData.name || (document.getElementById('student-name') ? document.getElementById('student-name').value.trim() : "Jogador");
+            if(certName) certName.innerText = name;
             
             const template = document.getElementById('certificateTemplate');
             if(!template) throw new Error("Template do certificado não encontrado no HTML!");
@@ -682,7 +683,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const imgData = canvas.toDataURL('image/jpeg', 0.95);
             pdf.addImage(imgData, 'JPEG', 0, 0, 297, 210);
             
-            const safeName = (currentStudent || "Jogador").replace(/\s+/g, '_');
+            const safeName = name.replace(/\s+/g, '_');
             pdf.save(`Certificado_Aura_${safeName}.pdf`);
             
             status.innerText = "Certificado Baixado com Sucesso! 🎓";
@@ -702,3 +703,4 @@ document.addEventListener('DOMContentLoaded', async () => {
             }, 3000);
         }
     };
+});
