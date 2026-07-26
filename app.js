@@ -251,76 +251,178 @@ document.addEventListener('DOMContentLoaded', async () => {
     inputStudentName.addEventListener('input', checkStartConditions);
     selectBook.addEventListener('change', checkStartConditions);
 
-    // --- NOVA LÓGICA: INICIAR ANÁLISE BAYESIANA ---
-    let bayesianProbResult = 0.5;
-
+    
+    // --- FLUXO DA AURA ---
     if(btnStartAura) {
         btnStartAura.addEventListener('click', () => {
             currentStudent = inputStudentName.value.trim();
             currentBook = selectBook.options[selectBook.selectedIndex].text;
-            priorProb = 0.5; // Reset
             
-            showView('bayesian');
-            bayesianInput.value = '';
-            bayesianResultArea.classList.add('hidden');
-            bayesianResultArea.classList.remove('flex');
-            bayesianDepthBar.style.width = '0%';
-            bayesianDepthPercentage.innerText = '0%';
+            playerData.name = currentStudent;
+            playerData.aura = 0;
+            playerData.history = [0];
+            currentQuestion = 1;
+
+            initAuraUI();
+            showView('aura');
         });
     }
 
-    if(btnAnalyzeBayesian) {
-        btnAnalyzeBayesian.addEventListener('click', () => {
-            const text = bayesianInput.value.trim();
-            if(!text) return;
-            
-            bayesianProbResult = updateBayesianProbability(text);
-            const probPct = Math.round(bayesianProbResult * 100);
-            
-            bayesianResultArea.classList.remove('hidden');
-            bayesianResultArea.classList.add('flex');
-            
-            setTimeout(() => {
-                bayesianDepthBar.style.width = `${probPct}%`;
-                bayesianDepthPercentage.innerText = `${probPct}%`;
-            }, 100);
-            
-            const diag = getDiagnosis(bayesianProbResult);
-            bayesianDiagnosis.className = `text-center mt-2 p-3 rounded-lg font-label-md text-lg border ${diag.color}`;
-            bayesianDiagnosis.innerText = diag.text;
-        });
+    function updateAuraUI() {
+        if(!playerDisplay) return;
+        playerDisplay.innerText = playerData.name;
+        auraScore.innerText = playerData.aura;
+        
+        let rank = "Iniciante";
+        let color = "from-slate-400 to-slate-200";
+        if (playerData.aura > 100) { rank = "Leitor Ávido"; color = "from-green-400 to-emerald-300"; }
+        if (playerData.aura > 300) { rank = "Explorador"; color = "from-blue-400 to-cyan-300"; }
+        if (currentQuestion > 20) { rank = "MESTRE DA AURA"; color = "from-yellow-400 to-amber-200"; }
+        
+        sigmaRank.innerText = rank;
+        sigmaRank.className = `text-xl font-display font-black text-transparent bg-clip-text bg-gradient-to-r ${color} mb-1 uppercase tracking-[0.2em] drop-shadow-lg text-center transition-all duration-500`;
+        
+        const pct = Math.min(((currentQuestion-1) / 20) * 100, 100);
+        auraPowerFill.style.width = pct + "%";
     }
 
-    if(btnSaveBayesian) {
-        btnSaveBayesian.addEventListener('click', async () => {
-            const text = bayesianInput.value.trim();
-            btnSaveBayesian.innerHTML = "Salvando...";
-            btnSaveBayesian.disabled = true;
+    function initAuraUI() {
+        chapterSelect.innerHTML = "";
+        for (let i = 1; i <= 20; i++) {
+            const opt = document.createElement('option');
+            opt.value = i;
+            opt.textContent = `Questão ${i} / 20`;
+            chapterSelect.appendChild(opt);
+        }
+        loadQuestion();
+        updateAuraUI();
+    }
+
+    chapterSelect.addEventListener('change', (e) => {
+        currentQuestion = parseInt(e.target.value);
+        loadQuestion();
+    });
+
+    function loadQuestion() {
+        const q = auraQuestions[currentQuestion];
+        if(!q) return;
+        document.getElementById('questionArea').classList.remove('hidden');
+        document.getElementById('welcomeArea').classList.add('hidden');
+        questionText.innerHTML = q.q;
+        studentAnswer.value = '';
+        evaluationArea.classList.add('hidden');
+        studentAnswer.disabled = false;
+        btnSubmit.disabled = false;
+        btnSubmit.innerHTML = `<span>Verificar Resposta</span><span class="material-symbols-outlined ml-2">arrow_forward</span>`;
+        chapterSelect.value = currentQuestion;
+    }
+
+    btnSubmit.addEventListener('click', async () => {
+        const ans = studentAnswer.value.trim();
+        if (ans.length < 20) {
+            alert("Sua resposta está muito curta. Desenvolva melhor seus argumentos (mínimo 20 letras) para farmar Aura!");
+            return;
+        }
+
+        studentAnswer.disabled = true;
+        btnSubmit.disabled = true;
+        btnSubmit.innerHTML = `<span class="animate-pulse">Analisando...</span>`;
+
+        await new Promise(r => setTimeout(r, 1000));
+
+        let points = 50;
+        
+        playerData.aura += points;
+        playerData.history.push(playerData.aura);
+        
+        evaluationArea.classList.remove('hidden');
+        autoFeedbackTitle.innerText = "Resposta Aceita!";
+        autoFeedbackTitle.className = "text-xl font-display font-bold text-emerald-400 tracking-wide";
+        autoFeedbackPoints.innerText = `+${points}`;
+        autoFeedbackPoints.className = "text-3xl font-black font-display text-emerald-400 drop-shadow-md";
+        autoFeedbackBox.className = "absolute top-0 left-0 w-1 h-full bg-emerald-500";
+        autoFeedbackIcon.innerText = "✅";
+        
+        const q = auraQuestions[currentQuestion];
+        expectedAnswer.innerHTML = q.a;
+        
+        updateAuraUI();
+
+        const anim = document.getElementById('animContainer');
+        if(anim) {
+            anim.textContent = `+${points} AURA!`;
+            anim.className = `absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-5xl font-display font-black pointer-events-none z-50 drop-shadow-[0_0_20px_rgba(255,255,255,0.6)] text-emerald-400 animate-float-up`;
+            anim.style.opacity = '1';
             
-            const diagText = getDiagnosis(bayesianProbResult).text;
-            
-            const sessionData = {
-                student_name: currentStudent,
-                book: currentBook,
-                date: new Date().toLocaleDateString('pt-BR'),
-                history: [
-                    { question: "Reflexão Bayesiana:", answer: text, probabilityAfter: bayesianProbResult }
-                ],
-                final_probability: bayesianProbResult,
-                diagnosis: `Análise: ${diagText}`
-            };
-            
-            const { error } = await supabase.from('sessions').insert([sessionData]);
-            
-            if(!error) {
-                alert("Análise salva com sucesso no painel do professor!");
-                showView('selection');
-            } else {
-                alert("Erro ao salvar: " + error.message);
+            setTimeout(async () => {
+                anim.style.opacity = '0';
+                anim.classList.remove('animate-float-up');
+                
+                const sessionData = {
+                    student_name: currentStudent,
+                    book: currentBook,
+                    date: new Date().toISOString().split('T')[0],
+                    history: playerData.history,
+                    final_probability: playerData.aura,
+                    diagnosis: "Nível: " + sigmaRank.innerText + " (Questão " + currentQuestion + ")"
+                };
+                await supabase.from('sessions').insert([sessionData]);
+                
+                if (currentQuestion < 20) {
+                    currentQuestion++;
+                    chapterSelect.value = currentQuestion;
+                    loadQuestion();
+                } else {
+                    if(completionModal) completionModal.classList.remove('hidden');
+                }
+            }, 1500);
+        }
+    });
+
+    window.closeLeaderboard = () => document.getElementById('leaderboardModal')?.classList.add('hidden');
+    window.openLeaderboard = async () => {
+        document.getElementById('leaderboardModal')?.classList.remove('hidden');
+        const list = document.getElementById('leaderboardList');
+        if(list) list.innerHTML = '<div class="absolute inset-0 flex items-center justify-center text-slate-500">Carregando...</div>';
+        
+        const { data, error } = await supabase.from('sessions').select('*').order('final_probability', { ascending: false }).limit(50);
+        
+        if(list) {
+            list.innerHTML = '';
+            if(error || !data || data.length === 0) {
+                list.innerHTML = '<div class="text-center text-slate-400 mt-4">Nenhum jogador encontrado.</div>';
+                return;
             }
+            const uniqueMap = {};
+            data.forEach(p => {
+                if(!uniqueMap[p.student_name] || uniqueMap[p.student_name].final_probability < p.final_probability) {
+                    uniqueMap[p.student_name] = p;
+                }
+            });
+            const uniqueArr = Object.values(uniqueMap).sort((a,b) => b.final_probability - a.final_probability);
             
-            btnSaveBayesian.innerHTML = `<span class="material-symbols-outlined">save</span> Salvar Resultado no Painel do Professor`;
-            btnSaveBayesian.disabled = false;
+            uniqueArr.forEach((p, idx) => {
+                const div = document.createElement('div');
+                div.className = "flex items-center justify-between p-4 mb-2 rounded-xl bg-dark-800/50 border border-white/5 hover:bg-white/5 transition-colors";
+                div.innerHTML = `
+                    <div class="flex items-center gap-4">
+                        <span class="text-2xl font-black text-slate-600 w-6">${idx + 1}</span>
+                        <span class="text-xl">👤</span>
+                        <div>
+                            <div class="font-bold text-white">${p.student_name}</div>
+                            <div class="text-xs text-brand-400">${p.book}</div>
+                        </div>
+                    </div>
+                    <div class="text-xl font-black text-brand-300">${p.final_probability} ⚡</div>
+                `;
+                list.appendChild(div);
+            });
+        }
+    };
+
+    if(btnBackAura) {
+        btnBackAura.addEventListener('click', () => {
+            showView('selection');
         });
     }
 
