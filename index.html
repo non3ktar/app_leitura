@@ -127,13 +127,15 @@
     <main class="flex-grow flex flex-col max-w-container-max mx-auto w-full px-gutter pt-md pb-[240px] relative">
         
         <!-- VIEW: SELECTION -->
-        <section id="view-selection" class="flex-1 flex flex-col justify-center items-center py-10 transition-opacity duration-300">
-            <div class="text-center mb-10">
+        <section id="view-selection" class="flex-1 flex flex-col justify-center items-center py-10 transition-opacity duration-300 relative overflow-hidden">
+            <img src="./farmador_nobg.png" class="hidden lg:block absolute left-4 lg:left-10 xl:left-32 bottom-0 h-[80%] max-h-[600px] object-contain z-0 animate-float-idle drop-shadow-[0_0_15px_rgba(255,255,255,0.2)] pointer-events-none opacity-80">
+            
+            <div class="text-center mb-10 z-10 relative">
                 <h2 class="font-display-lg text-display-lg-mobile md:text-display-lg text-primary mb-4">Olá, Leitor.</h2>
                 <p class="font-body-lg text-body-lg text-on-surface-variant">Qual obra vamos explorar hoje?</p>
             </div>
             
-            <div class="w-full max-w-md bg-surface-container-low p-6 rounded-[24px] shadow-sm border border-outline-variant">
+            <div class="w-full max-w-md bg-surface-container-low p-6 rounded-[24px] shadow-sm border border-outline-variant z-10 relative">
                 <div class="mb-6">
                     <label for="student-name" class="block font-label-md text-label-md text-on-surface mb-2">Seu Nome</label>
                     <input type="text" id="student-name" placeholder="Digite seu nome..." class="w-full bg-surface border border-outline-variant rounded-xl p-4 font-body-lg focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all">

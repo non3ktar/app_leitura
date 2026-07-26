@@ -444,14 +444,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     btnBackTeacher.addEventListener('click', () => showView('selection'));
     
-    if(btnBackBayesian) {
-        btnBackBayesian.addEventListener('click', () => {
-            showView('selection');
-        });
-    }
-
-
-    // ----- PAINEL DO PROFESSOR ----- //
+        // ----- PAINEL DO PROFESSOR ----- //
     function updateMetrics(){
         const freeWritingSessions = allSessions.filter(s => s.diagnosis && s.diagnosis.startsWith('Humor:'));
         const bayesianSessions = allSessions.filter(s => s.diagnosis && s.diagnosis.startsWith('Análise:'));
