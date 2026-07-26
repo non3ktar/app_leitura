@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const views = {
         selection: document.getElementById('view-selection'),
         teacher: document.getElementById('view-teacher'),
-        bayesian: document.getElementById('view-bayesian')
+        aura: document.getElementById('view-aura')
     };
 
     const inputStudentName = document.getElementById('student-name');
@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const btnTeacherPanel = document.getElementById('btn-teacher-panel');
     const btnBackTeacher = document.getElementById('btn-back-teacher');
     
-    const btnBackBayesian = document.getElementById('btn-back-bayesian');
+    const btnBackAura = document.getElementById('btn-back-aura');
 
     // Teacher Panel DOM
     const inputNewBook = document.getElementById('new-book-input');
@@ -38,19 +38,64 @@ document.addEventListener('DOMContentLoaded', async () => {
     const btnExportReport = document.getElementById('btn-export-report');
 
     // Elementos da Análise Bayesiana
-    const btnStartBayesian = document.getElementById('btn-start-bayesian');
-    const bayesianInput = document.getElementById('bayesian-input');
-    const btnAnalyzeBayesian = document.getElementById('btn-analyze-bayesian');
-    const bayesianResultArea = document.getElementById('bayesian-result-area');
-    const bayesianDepthPercentage = document.getElementById('bayesian-depth-percentage');
-    const bayesianDepthBar = document.getElementById('bayesian-depth-bar');
-    const bayesianDiagnosis = document.getElementById('bayesian-diagnosis');
-    const btnSaveBayesian = document.getElementById('btn-save-bayesian');
+    const btnStartAura = document.getElementById('btn-start-aura');
+    
+    
+    
+    
+    
+    
+    
 
     // Abrir/Fechar Help Modal
     btnHelp.addEventListener('click', () => helpModal.classList.remove('hidden'));
     btnCloseHelp.addEventListener('click', () => helpModal.classList.add('hidden'));
 
+
+    
+    // --- AURA STATE & QUESTIONS ---
+    const playerDisplay = document.getElementById('playerDisplay');
+    const playerAvatar = document.getElementById('playerAvatar');
+    const auraScore = document.getElementById('auraScore');
+    const chapterSelect = document.getElementById('chapterSelect');
+    const questionText = document.getElementById('questionText');
+    const expectedAnswer = document.getElementById('expectedAnswer');
+    const studentAnswer = document.getElementById('studentAnswer');
+    const btnSubmit = document.getElementById('btnSubmit');
+    const evaluationArea = document.getElementById('evaluationArea');
+    const autoFeedbackTitle = document.getElementById('autoFeedbackTitle');
+    const autoFeedbackPoints = document.getElementById('autoFeedbackPoints');
+    const autoFeedbackBox = document.getElementById('autoFeedbackBox');
+    const autoFeedbackIcon = document.getElementById('autoFeedbackIcon');
+    const auraPowerFill = document.getElementById('auraPowerFill');
+    const sigmaRank = document.getElementById('sigmaRank');
+    const completionModal = document.getElementById('completionModal');
+
+    let playerData = { id: null, name: null, avatar: './farmador_nobg.png', aura: 0, history: [0] };
+    let currentQuestion = 1;
+
+    const auraQuestions = {
+        1: { q: "(D1 - Info. Explícita) Para começarmos a farmar aura, transcreva um pequeno trecho do livro que descreve fisicamente ou psicologicamente a personagem principal.", a: "Espera-se que o aluno localize e copie um trecho literal do livro focado em características (adjetivos) do protagonista." },
+        2: { q: "(D1 - Info. Explícita) De acordo com as primeiras páginas da leitura, onde e em que época a história principal acontece?", a: "O aluno deve identificar o tempo e espaço da narrativa de forma direta, baseado no início do texto." },
+        3: { q: "(D4 - Info. Implícita) Lendo nas entrelinhas: com base nas atitudes do protagonista, o que podemos deduzir sobre suas verdadeiras intenções ou seus maiores medos?", a: "O aluno deve inferir informações que não estão escritas diretamente, usando pistas dadas pelo comportamento do personagem." },
+        4: { q: "(D4 - Info. Implícita) Há algum mistério ou segredo não revelado diretamente pelo autor que você conseguiu pescar durante a leitura? Explique o que você descobriu.", a: "O aluno deve apontar uma dedução pessoal sobre o enredo, justificando sua inferência a partir do texto lido." },
+        5: { q: "(D14 - Fato x Opinião) Escolha um acontecimento impactante do livro. Descreva o fato (o que realmente ocorreu) e depois dê a sua opinião sobre a atitude dos personagens nesse momento.", a: "O aluno deve separar nitidamente a ação (fato inquestionável) do seu julgamento moral (opinião)." },
+        6: { q: "(D14 - Fato x Opinião) Identifique no texto um momento em que o narrador ou outro personagem expressa uma opinião forte sobre algo ou alguém. Transcreva e explique.", a: "Espera-se que o aluno encontre um trecho com marcas de subjetividade, julgamento ou adjetivação valorativa." },
+        7: { q: "(D10 - Conflito) Todo bom livro tem um problema a ser resolvido. Qual é o conflito principal, o grande obstáculo que movimenta essa história?", a: "O aluno deve identificar o núcleo do enredo, a força ou problema que se opõe ao desejo dos protagonistas." },
+        8: { q: "(D10 - Clímax) Qual foi a cena de maior tensão ou emoção do livro (o clímax)? Como você se sentiu lendo essa parte?", a: "O aluno deve relatar o momento de virada ou pico de tensão da obra, e expressar sua reação pessoal (engajamento)." },
+        9: { q: "(D2 - Estabelecer Relações) Faça uma conexão: como um acontecimento que parecia sem importância no início da história se mostrou fundamental para o final?", a: "Espera-se uma análise estrutural do texto, ligando causa inicial com consequência final." },
+        10: { q: "(D6 - Tema Central) Se você tivesse que resumir a mensagem principal (ou o tema) que o autor quis passar com esse livro em uma frase, qual seria?", a: "O aluno deve abstrair o assunto geral da obra, indo além dos personagens (ex: 'O tema é a corrupção do ser humano', etc)." },
+        11: { q: "(D12 - Finalidade do Texto) Embora seja um texto literário focado no entretenimento, você acha que o autor escreveu essa história para fazer alguma crítica social ou passar algum ensinamento? Qual?", a: "Espera-se que o aluno identifique intenções secundárias do texto, como moral da história ou denúncia social." },
+        12: { q: "(D13 - Marcas de Linguagem) Observe a linguagem do livro: há uso de gírias, palavras muito antigas ou sotaques regionais? Dê um exemplo de como os personagens falam.", a: "O aluno deve reconhecer as variações linguísticas presentes no livro (históricas, regionais ou sociais)." },
+        13: { q: "(D15 - Relação Lógico-Discursiva) Encontre um momento em que uma ação gerou uma grande consequência na história (Causa e Consequência) e explique como uma coisa levou à outra.", a: "O aluno deve articular os fatos demonstrando a conexão lógica entre eventos sucessivos da narrativa." },
+        14: { q: "(D11 - Relação entre Textos) Esse livro te lembrou de algum filme, série ou outro livro que você já leu? Faça uma comparação entre os dois.", a: "O aluno fará uma intertextualidade temática, comparando a obra atual com seu repertório cultural." },
+        15: { q: "(D8 - Efeito de Sentido / Ironia) Aconteceu alguma situação irônica na história? (Algo que aconteceu exatamente ao contrário do que o personagem esperava). Conte como foi.", a: "Espera-se a identificação da quebra de expectativa ou de um acontecimento irônico na trama." },
+        16: { q: "(D3 - Sentido de Palavras) Houve alguma palavra ou expressão curiosa/desconhecida que você aprendeu com esse livro pelo contexto da frase? Qual era e o que significa?", a: "O aluno deve demonstrar dedução do significado de vocabulário pelo contexto em que foi empregado." },
+        17: { q: "(D4 - Inferência de Humor) Qual cena do livro você achou mais engraçada ou bizarra? O que o autor fez para deixar essa cena com esse tom?", a: "Espera-se que o aluno descreva os recursos (exagero, quebra de expectativa) usados para criar humor ou estranheza." },
+        18: { q: "(D10 - Desfecho) Como o grande problema da história foi resolvido? Você mudaria algo nesse final se fosse o autor?", a: "O aluno deve sintetizar o desfecho da narrativa e demonstrar engajamento crítico com o final." },
+        19: { q: "(D14 - Fato x Opinião) Se você pudesse entrar na história e dar um conselho final ao protagonista baseado no que aconteceu, o que você diria?", a: "O aluno posiciona sua opinião pessoal sobre a jornada do personagem, avaliando suas atitudes." },
+        20: { q: "(Síntese Final) Para platinar sua Aura e ganhar o certificado: por que o próximo leitor da escola deveria (ou não) escolher este mesmo livro para ler?", a: "O aluno formula um argumento final, atuando como crítico literário e recomendando a obra a seus pares." }
+    };
 
     // Estado Global
     let currentBook = null;
