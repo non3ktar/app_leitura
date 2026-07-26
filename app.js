@@ -246,7 +246,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function checkStartConditions() {
         const canStart = inputStudentName.value.trim() && selectBook.value;
-        if(btnStartBayesian) btnStartBayesian.disabled = !canStart;
+        if(btnStartAura) btnStartAura.disabled = !canStart;
     }
     inputStudentName.addEventListener('input', checkStartConditions);
     selectBook.addEventListener('change', checkStartConditions);
@@ -254,8 +254,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     // --- NOVA LÓGICA: INICIAR ANÁLISE BAYESIANA ---
     let bayesianProbResult = 0.5;
 
-    if(btnStartBayesian) {
-        btnStartBayesian.addEventListener('click', () => {
+    if(btnStartAura) {
+        btnStartAura.addEventListener('click', () => {
             currentStudent = inputStudentName.value.trim();
             currentBook = selectBook.options[selectBook.selectedIndex].text;
             priorProb = 0.5; // Reset
