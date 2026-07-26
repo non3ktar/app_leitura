@@ -373,7 +373,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     chapterSelect.value = currentQuestion;
                     loadQuestion();
                 } else {
-                    if(completionModal) completionModal.classList.remove('hidden');
+                    if(completionModal) { completionModal.classList.remove('hidden'); setTimeout(() => completionModal.classList.remove('opacity-0'), 10); btnSubmit.innerHTML = `<span>Finalizado!</span>`; }
                 }
             }, 1500);
         }
